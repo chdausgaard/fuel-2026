@@ -1,0 +1,590 @@
+{
+ "source": "Project estimates for the explainer site: variance shares from the 2026 analysis frame (actual window, Oct 13–28 prices, 7-day minimum in 2026 only; outcomes play no role) and crude-comparison placebos on the twelve past elections of the registered battery (reports/validation/T4a_placebo_battery_chart.csv for the final design, window actual, version county_markets_F1). Provisional until the window closes on Nov 2; 2024 baseline retains the 10-day minimum.",
+ "units": "stages: variance of the treatment (percent of monthly income, squared) and shares of the raw and the within-race variance; placebos: points toward the Democrats per extra $10 a month of fuel costs; N2 bars are 95% intervals from the reshuffling test, N0 and N1 bars are conventional 95% intervals from state-clustered (CR1) standard errors",
+ "window": {
+  "pre": [
+   "2024-10-15",
+   "2024-11-04"
+  ],
+  "post": [
+   "2026-10-13",
+   "2026-11-02"
+  ]
+ },
+ "run_utc": "2026-10-29T06:28:32.461411+00:00",
+ "per_10_dollars_factor": 0.1502,
+ "frame": {
+  "n_rows": 4385,
+  "n_races": 66,
+  "n_counties": 2782,
+  "n_states": 44,
+  "level": "county",
+  "share_rows_in_market": 0.9993,
+  "excluded_rows": 4,
+  "price_window": "actual",
+  "min_days_post": 7,
+  "unusual_part": {
+   "definition": "Median absolute block-centered price deviation across covered markets, unweighted; dollars use the same representative 73 monthly household gallons (content_brief.md: 72–74).",
+   "median_abs_deviation_cents": 4.5548,
+   "representative_gallons_hh_month": 73.0,
+   "monthly_dollars": 3.325,
+   "rule_out_points_per_10_dollars": 0.21,
+   "vote_points": 0.0698
+  }
+ },
+ "stages": {
+  "regression": {
+   "variance": {
+    "V0": 0.1457,
+    "V1": 0.072,
+    "V2": 0.0056,
+    "V2_local": 0.0046,
+    "V2_state": 0.0009,
+    "V3": 0.0051,
+    "V2_cov2": -0.0,
+    "V4": 0.005,
+    "V5": 0.005,
+    "V6": 0.0049,
+    "V7": 0.0049,
+    "V7_local": 0.0045,
+    "V7_state": 0.0004,
+    "V7_cov2": -0.0
+   },
+   "ratios": {
+    "V1_over_V0": 0.4943,
+    "V2_over_V0": 0.0381,
+    "V2_over_V1": 0.0771,
+    "V3_over_V0": 0.0349,
+    "V3_over_V1": 0.0706,
+    "V4_over_V0": 0.0346,
+    "V4_over_V1": 0.0699,
+    "V5_over_V0": 0.034,
+    "V5_over_V1": 0.0687,
+    "V6_over_V0": 0.0339,
+    "V6_over_V1": 0.0687,
+    "V7_over_V0": 0.0339,
+    "V7_over_V1": 0.0686,
+    "V2_local_over_V1": 0.0643,
+    "V7_local_over_V7": 0.9127,
+    "V2_state_over_V1": 0.0131,
+    "V7_state_over_V7": 0.0873,
+    "V2_cov2_over_V1": -0.0003,
+    "V7_cov2_over_V7": -0.0,
+    "step_removed_over_V1": {
+     "V2_to_V3": 0.0065,
+     "V3_to_V4": 0.0007,
+     "V4_to_V5": 0.0012,
+     "V5_to_V6": 0.0001,
+     "V6_to_V7": 0.0
+    }
+   },
+   "sd_pct_income": {
+    "V0": 0.3817,
+    "V1": 0.2684,
+    "V2": 0.0745,
+    "V2_local": 0.0681,
+    "V2_state": 0.0307,
+    "V3": 0.0713,
+    "V4": 0.071,
+    "V5": 0.0704,
+    "V6": 0.0703,
+    "V7": 0.0703,
+    "V7_local": 0.0672,
+    "V7_state": 0.0208
+   }
+  },
+  "household": {
+   "variance": {
+    "V0": 0.15,
+    "V1": 0.0743,
+    "V2": 0.0056,
+    "V2_local": 0.0047,
+    "V2_state": 0.0009,
+    "V3": 0.0052,
+    "V2_cov2": -0.0,
+    "V4": 0.0051,
+    "V5": 0.005,
+    "V6": 0.005,
+    "V7": 0.005,
+    "V7_local": 0.0046,
+    "V7_state": 0.0004,
+    "V7_cov2": -0.0
+   },
+   "ratios": {
+    "V1_over_V0": 0.4955,
+    "V2_over_V0": 0.0376,
+    "V2_over_V1": 0.0759,
+    "V3_over_V0": 0.0344,
+    "V3_over_V1": 0.0693,
+    "V4_over_V0": 0.034,
+    "V4_over_V1": 0.0687,
+    "V5_over_V0": 0.0335,
+    "V5_over_V1": 0.0677,
+    "V6_over_V0": 0.0335,
+    "V6_over_V1": 0.0676,
+    "V7_over_V0": 0.0335,
+    "V7_over_V1": 0.0676,
+    "V2_local_over_V1": 0.0639,
+    "V7_local_over_V7": 0.9175,
+    "V2_state_over_V1": 0.0126,
+    "V7_state_over_V7": 0.0828,
+    "V2_cov2_over_V1": -0.0005,
+    "V7_cov2_over_V7": -0.0003,
+    "step_removed_over_V1": {
+     "V2_to_V3": 0.0066,
+     "V3_to_V4": 0.0006,
+     "V4_to_V5": 0.001,
+     "V5_to_V6": 0.0,
+     "V6_to_V7": 0.0001
+    }
+   },
+   "sd_pct_income": {
+    "V0": 0.3873,
+    "V1": 0.2726,
+    "V2": 0.0751,
+    "V2_local": 0.0689,
+    "V2_state": 0.0305,
+    "V3": 0.0718,
+    "V4": 0.0715,
+    "V5": 0.0709,
+    "V6": 0.0709,
+    "V7": 0.0709,
+    "V7_local": 0.0679,
+    "V7_state": 0.0204
+   }
+  },
+  "unweighted": {
+   "variance": {
+    "V0": 0.1577,
+    "V1": 0.0869,
+    "V2": 0.0102,
+    "V2_local": 0.0097,
+    "V2_state": 0.0008,
+    "V3": 0.0101,
+    "V2_cov2": -0.0002,
+    "V4": 0.0101,
+    "V5": 0.0099,
+    "V6": 0.0099,
+    "V7": 0.0099,
+    "V7_local": 0.0096,
+    "V7_state": 0.0005,
+    "V7_cov2": -0.0001
+   },
+   "ratios": {
+    "V1_over_V0": 0.5508,
+    "V2_over_V0": 0.065,
+    "V2_over_V1": 0.118,
+    "V3_over_V0": 0.0641,
+    "V3_over_V1": 0.1164,
+    "V4_over_V0": 0.064,
+    "V4_over_V1": 0.1162,
+    "V5_over_V0": 0.063,
+    "V5_over_V1": 0.1144,
+    "V6_over_V0": 0.063,
+    "V6_over_V1": 0.1143,
+    "V7_over_V0": 0.0629,
+    "V7_over_V1": 0.1142,
+    "V2_local_over_V1": 0.1112,
+    "V7_local_over_V7": 0.9652,
+    "V2_state_over_V1": 0.0089,
+    "V7_state_over_V7": 0.0478,
+    "V2_cov2_over_V1": -0.0022,
+    "V7_cov2_over_V7": -0.013,
+    "step_removed_over_V1": {
+     "V2_to_V3": 0.0015,
+     "V3_to_V4": 0.0003,
+     "V4_to_V5": 0.0018,
+     "V5_to_V6": 0.0001,
+     "V6_to_V7": 0.0001
+    }
+   },
+   "sd_pct_income": {
+    "V0": 0.3971,
+    "V1": 0.2947,
+    "V2": 0.1012,
+    "V2_local": 0.0983,
+    "V2_state": 0.0279,
+    "V3": 0.1006,
+    "V4": 0.1005,
+    "V5": 0.0997,
+    "V6": 0.0997,
+    "V7": 0.0996,
+    "V7_local": 0.0978,
+    "V7_state": 0.0218
+   }
+  }
+ },
+ "comparisons": {
+  "n0": "all counties: raw burden, constant only",
+  "n1": "same race: raw burden, race fixed effects only",
+  "n2": "final design: recentred burden with the registered controls and race fixed effects"
+ },
+ "placebo_summary": {
+  "n0": {
+   "sum_t2": 40.726,
+   "n_abs_t_gt_196": 1,
+   "mean_se": 0.2442,
+   "mean_abs_est": 0.3883
+  },
+  "n1": {
+   "sum_t2": 123.5071,
+   "n_abs_t_gt_196": 5,
+   "mean_se": 0.1387,
+   "mean_abs_est": 0.3832
+  },
+  "n2": {
+   "sum_t2": 10.1709,
+   "n_abs_t_gt_196": 0,
+   "mean_se": 0.1901,
+   "mean_abs_est": 0.1298
+  }
+ },
+ "gates": {
+  "n2_sum_t2": 10.1709,
+  "n2_n_abs_t_gt_196": 0,
+  "target_sum_t2": 10.1709,
+  "target_n_abs_t_gt_196": 0,
+  "max_abs_t_diff_vs_chart": 0.0,
+  "max_abs_beta_diff_vs_chart": 0.0,
+  "ok_sum_t2": true,
+  "ok_n196": true
+ },
+ "rows": [
+  {
+   "id": "mid_2002",
+   "label": "2002 midterm",
+   "kind": "midterm",
+   "n_rows": 4138,
+   "n0": {
+    "est": 1.1513,
+    "lo": -0.0246,
+    "hi": 2.3272,
+    "se": 0.5999,
+    "t": 1.9191
+   },
+   "n1": {
+    "est": 0.1956,
+    "lo": -0.1219,
+    "hi": 0.5131,
+    "se": 0.162,
+    "t": 1.2075
+   },
+   "n2": {
+    "est": -0.1767,
+    "lo": -1.0311,
+    "hi": 0.6842,
+    "se": 0.3647,
+    "t": -0.4844,
+    "p_ri": 0.6741
+   }
+  },
+  {
+   "id": "mid_2006",
+   "label": "2006 midterm",
+   "kind": "midterm",
+   "n_rows": 3898,
+   "n0": {
+    "est": 0.5559,
+    "lo": -0.1034,
+    "hi": 1.2152,
+    "se": 0.3364,
+    "t": 1.6526
+   },
+   "n1": {
+    "est": 0.5539,
+    "lo": 0.3579,
+    "hi": 0.7498,
+    "se": 0.1,
+    "t": 5.5394
+   },
+   "n2": {
+    "est": -0.1955,
+    "lo": -0.7013,
+    "hi": 0.3205,
+    "se": 0.2148,
+    "t": -0.9099,
+    "p_ri": 0.4646
+   }
+  },
+  {
+   "id": "mid_2010",
+   "label": "2010 midterm",
+   "kind": "midterm",
+   "n_rows": 4242,
+   "n0": {
+    "est": -0.2886,
+    "lo": -0.9816,
+    "hi": 0.4044,
+    "se": 0.3536,
+    "t": -0.8162
+   },
+   "n1": {
+    "est": 0.4424,
+    "lo": 0.1741,
+    "hi": 0.7108,
+    "se": 0.1369,
+    "t": 3.2319
+   },
+   "n2": {
+    "est": 0.0121,
+    "lo": -0.4433,
+    "hi": 0.461,
+    "se": 0.2027,
+    "t": 0.0596,
+    "p_ri": 0.958
+   }
+  },
+  {
+   "id": "mid_2014",
+   "label": "2014 midterm",
+   "kind": "midterm",
+   "n_rows": 4315,
+   "n0": {
+    "est": -0.3293,
+    "lo": -0.8532,
+    "hi": 0.1946,
+    "se": 0.2673,
+    "t": -1.232
+   },
+   "n1": {
+    "est": -0.1539,
+    "lo": -0.5436,
+    "hi": 0.2359,
+    "se": 0.1989,
+    "t": -0.7736
+   },
+   "n2": {
+    "est": -0.047,
+    "lo": -0.6626,
+    "hi": 0.561,
+    "se": 0.2721,
+    "t": -0.1728,
+    "p_ri": 0.8771
+   }
+  },
+  {
+   "id": "mid_2018",
+   "label": "2018 midterm",
+   "kind": "midterm",
+   "n_rows": 4039,
+   "n0": {
+    "est": 0.4995,
+    "lo": -0.0948,
+    "hi": 1.0939,
+    "se": 0.3032,
+    "t": 1.6473
+   },
+   "n1": {
+    "est": 0.3147,
+    "lo": 0.064,
+    "hi": 0.5654,
+    "se": 0.1279,
+    "t": 2.4606
+   },
+   "n2": {
+    "est": 0.1599,
+    "lo": -0.1572,
+    "hi": 0.4795,
+    "se": 0.1356,
+    "t": 1.1793,
+    "p_ri": 0.3408
+   }
+  },
+  {
+   "id": "mid_2022",
+   "label": "2022 midterm",
+   "kind": "midterm",
+   "n_rows": 4191,
+   "n0": {
+    "est": 0.1038,
+    "lo": -0.3086,
+    "hi": 0.5162,
+    "se": 0.2104,
+    "t": 0.4933
+   },
+   "n1": {
+    "est": -0.0447,
+    "lo": -0.2144,
+    "hi": 0.125,
+    "se": 0.0866,
+    "t": -0.516
+   },
+   "n2": {
+    "est": -0.1382,
+    "lo": -0.3861,
+    "hi": 0.11,
+    "se": 0.1144,
+    "t": -1.2077,
+    "p_ri": 0.2635
+   }
+  },
+  {
+   "id": "pres_2000_2004",
+   "label": "2000–04 presidential",
+   "kind": "presidential",
+   "n_rows": 3101,
+   "n0": {
+    "est": -0.177,
+    "lo": -0.4564,
+    "hi": 0.1023,
+    "se": 0.1425,
+    "t": -1.2421
+   },
+   "n1": {
+    "est": -0.5366,
+    "lo": -0.7385,
+    "hi": -0.3347,
+    "se": 0.103,
+    "t": -5.2088
+   },
+   "n2": {
+    "est": -0.0756,
+    "lo": -0.6181,
+    "hi": 0.4747,
+    "se": 0.2397,
+    "t": -0.3153,
+    "p_ri": 0.778
+   }
+  },
+  {
+   "id": "pres_2004_2008",
+   "label": "2004–08 presidential",
+   "kind": "presidential",
+   "n_rows": 3102,
+   "n0": {
+    "est": -0.1985,
+    "lo": -0.5194,
+    "hi": 0.1223,
+    "se": 0.1637,
+    "t": -1.2127
+   },
+   "n1": {
+    "est": -0.3001,
+    "lo": -0.6287,
+    "hi": 0.0285,
+    "se": 0.1677,
+    "t": -1.7902
+   },
+   "n2": {
+    "est": 0.262,
+    "lo": -0.0545,
+    "hi": 0.5841,
+    "se": 0.1527,
+    "t": 1.7165,
+    "p_ri": 0.105
+   }
+  },
+  {
+   "id": "pres_2008_2012",
+   "label": "2008–12 presidential",
+   "kind": "presidential",
+   "n_rows": 3102,
+   "n0": {
+    "est": -0.1784,
+    "lo": -0.3602,
+    "hi": 0.0035,
+    "se": 0.0928,
+    "t": -1.9227
+   },
+   "n1": {
+    "est": -0.0813,
+    "lo": -0.1998,
+    "hi": 0.0372,
+    "se": 0.0605,
+    "t": -1.3441
+   },
+   "n2": {
+    "est": 0.1385,
+    "lo": -0.1187,
+    "hi": 0.3934,
+    "se": 0.114,
+    "t": 1.2148,
+    "p_ri": 0.2754
+   }
+  },
+  {
+   "id": "pres_2012_2016",
+   "label": "2012–16 presidential",
+   "kind": "presidential",
+   "n_rows": 3111,
+   "n0": {
+    "est": -0.9614,
+    "lo": -1.3965,
+    "hi": -0.5262,
+    "se": 0.222,
+    "t": -4.3299
+   },
+   "n1": {
+    "est": -1.5659,
+    "lo": -2.068,
+    "hi": -1.0638,
+    "se": 0.2562,
+    "t": -6.1127
+   },
+   "n2": {
+    "est": 0.1922,
+    "lo": -0.2456,
+    "hi": 0.6339,
+    "se": 0.192,
+    "t": 1.0008,
+    "p_ri": 0.3814
+   }
+  },
+  {
+   "id": "pres_2016_2020",
+   "label": "2016–20 presidential",
+   "kind": "presidential",
+   "n_rows": 3111,
+   "n0": {
+    "est": -0.2077,
+    "lo": -0.4192,
+    "hi": 0.0037,
+    "se": 0.1079,
+    "t": -1.9258
+   },
+   "n1": {
+    "est": -0.2877,
+    "lo": -0.6218,
+    "hi": 0.0465,
+    "se": 0.1705,
+    "t": -1.6874
+   },
+   "n2": {
+    "est": -0.0937,
+    "lo": -0.412,
+    "hi": 0.224,
+    "se": 0.1324,
+    "t": -0.7078,
+    "p_ri": 0.5679
+   }
+  },
+  {
+   "id": "pres_2020_2024",
+   "label": "2020–24 presidential",
+   "kind": "presidential",
+   "n_rows": 3111,
+   "n0": {
+    "est": -0.0084,
+    "lo": -0.2649,
+    "hi": 0.2481,
+    "se": 0.1309,
+    "t": -0.0644
+   },
+   "n1": {
+    "est": -0.1214,
+    "lo": -0.307,
+    "hi": 0.0641,
+    "se": 0.0947,
+    "t": -1.2825
+   },
+   "n2": {
+    "est": -0.0659,
+    "lo": -0.4228,
+    "hi": 0.2945,
+    "se": 0.1467,
+    "t": -0.4491,
+    "p_ri": 0.7068
+   }
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+{
+ "source": "EIA weekly retail prices; ACS-based exposure",
+ "rough": true,
+ "method": "Relief = mean(Ohio - Midwest) over the weeks before the cut minus the same mean from the cut on. Midwest (PADD 2) includes Ohio, so this understates the cut a little.",
+ "cut_date": "2026-10-04",
+ "tax_cents": 38.5,
+ "weeks_before": [
+  "2026-07-27",
+  "2026-08-03",
+  "2026-08-10",
+  "2026-08-17",
+  "2026-08-24",
+  "2026-08-31",
+  "2026-09-07",
+  "2026-09-14",
+  "2026-09-21",
+  "2026-09-28"
+ ],
+ "weeks_after": [
+  "2026-10-05",
+  "2026-10-12",
+  "2026-10-19"
+ ],
+ "gap_before_cents": 5.6,
+ "gap_after_cents": -21.7,
+ "gap_by_week_cents": {
+  "2026-07-27": -3.3,
+  "2026-08-03": 15.6,
+  "2026-08-10": 8.3,
+  "2026-08-17": 24.2,
+  "2026-08-24": 4.7,
+  "2026-08-31": -5.0,
+  "2026-09-07": -0.9,
+  "2026-09-14": 5.6,
+  "2026-09-21": 9.2,
+  "2026-09-28": -2.8,
+  "2026-10-05": -28.0,
+  "2026-10-12": -27.5,
+  "2026-10-19": -9.6
+ },
+ "relief_cents": 27.3,
+ "relief_share_of_tax": 0.708,
+ "oh_mean_2026_window": 4.049,
+ "weeks_2026_window": 1,
+ "oh_mean_2024_window": 2.899,
+ "oh_rise_actual": 1.15,
+ "oh_rise_without_cut": 1.423,
+ "counties": {
+  "high_rural": {
+   "fips": "39001",
+   "name": "Adams County",
+   "metro": false,
+   "exposure": 1.97,
+   "exposure_unit": "% of monthly income per $1/gal",
+   "market_part": 2.8,
+   "relief_part": -0.54,
+   "net": 2.27,
+   "unit": "% of monthly income"
+  },
+  "low_suburban": {
+   "fips": "39041",
+   "name": "Delaware County",
+   "metro": true,
+   "exposure": 0.71,
+   "exposure_unit": "% of monthly income per $1/gal",
+   "market_part": 1.01,
+   "relief_part": -0.19,
+   "net": 0.82,
+   "unit": "% of monthly income"
+  }
+ }
+}

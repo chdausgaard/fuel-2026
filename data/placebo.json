@@ -1,0 +1,140 @@
+{
+ "source": "Project estimates (reports/validation/T4a_placebo_battery_chart.csv, window actual = Oct 13–28 prices, 2026, 7-day minimum in each window, against Oct 15 - Nov 4, 2024; main design, the vote-shift control on every row). Provisional until the window closes on Nov 2.",
+ "units": "points toward the Democrats per extra $10 a month of fuel costs; bars are 95% intervals from the reshuffling test",
+ "window": {
+  "pre": [
+   "2024-10-15",
+   "2024-11-04"
+  ],
+  "post": [
+   "2026-10-13",
+   "2026-11-02"
+  ]
+ },
+ "run_utc": "2026-10-31T22:01:25.125536+00:00",
+ "sum_t2": 8.6,
+ "min_p": 0.144,
+ "n_beyond_196": 0,
+ "rows": [
+  {
+   "id": "mid_2002",
+   "label": "2002 midterm",
+   "kind": "midterm",
+   "est": -0.148,
+   "lo": -0.975,
+   "hi": 0.701,
+   "t": -0.41,
+   "p": 0.716
+  },
+  {
+   "id": "mid_2006",
+   "label": "2006 midterm",
+   "kind": "midterm",
+   "est": -0.191,
+   "lo": -0.694,
+   "hi": 0.321,
+   "t": -0.9,
+   "p": 0.472
+  },
+  {
+   "id": "mid_2010",
+   "label": "2010 midterm",
+   "kind": "midterm",
+   "est": 0.014,
+   "lo": -0.44,
+   "hi": 0.462,
+   "t": 0.07,
+   "p": 0.951
+  },
+  {
+   "id": "mid_2014",
+   "label": "2014 midterm",
+   "kind": "midterm",
+   "est": -0.047,
+   "lo": -0.662,
+   "hi": 0.561,
+   "t": -0.17,
+   "p": 0.878
+  },
+  {
+   "id": "mid_2018",
+   "label": "2018 midterm",
+   "kind": "midterm",
+   "est": 0.161,
+   "lo": -0.156,
+   "hi": 0.48,
+   "t": 1.18,
+   "p": 0.339
+  },
+  {
+   "id": "mid_2022",
+   "label": "2022 midterm",
+   "kind": "midterm",
+   "est": -0.138,
+   "lo": -0.386,
+   "hi": 0.11,
+   "t": -1.21,
+   "p": 0.265
+  },
+  {
+   "id": "pres_2000_2004",
+   "label": "2000–04 presidential",
+   "kind": "presidential",
+   "est": -0.104,
+   "lo": -0.681,
+   "hi": 0.479,
+   "t": -0.41,
+   "p": 0.728
+  },
+  {
+   "id": "pres_2004_2008",
+   "label": "2004–08 presidential",
+   "kind": "presidential",
+   "est": 0.285,
+   "lo": -0.098,
+   "hi": 0.667,
+   "t": 1.59,
+   "p": 0.144
+  },
+  {
+   "id": "pres_2008_2012",
+   "label": "2008–12 presidential",
+   "kind": "presidential",
+   "est": 0.106,
+   "lo": -0.149,
+   "hi": 0.362,
+   "t": 0.94,
+   "p": 0.4
+  },
+  {
+   "id": "pres_2012_2016",
+   "label": "2012–16 presidential",
+   "kind": "presidential",
+   "est": 0.153,
+   "lo": -0.265,
+   "hi": 0.572,
+   "t": 0.83,
+   "p": 0.465
+  },
+  {
+   "id": "pres_2016_2020",
+   "label": "2016–20 presidential",
+   "kind": "presidential",
+   "est": -0.093,
+   "lo": -0.424,
+   "hi": 0.236,
+   "t": -0.69,
+   "p": 0.581
+  },
+  {
+   "id": "pres_2020_2024",
+   "label": "2020–24 presidential",
+   "kind": "presidential",
+   "est": -0.018,
+   "lo": -0.27,
+   "hi": 0.233,
+   "t": -0.17,
+   "p": 0.89
+  }
+ ]
+}

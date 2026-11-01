@@ -1,0 +1,272 @@
+{
+ "source": "Project calculation on AAA prices, weighted as the regression is; provisional until the price window closes on Nov 2. No vote results are used.",
+ "run_utc": "2026-10-30T12:29:57Z",
+ "window": "actual",
+ "min_days_post": 7,
+ "areas": [
+  {
+   "region": "1A",
+   "region_label": "New England",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 19,
+   "share_of_votes": 0.0467,
+   "share_of_estimate": 0.0064,
+   "ratio": 0.1377
+  },
+  {
+   "region": "1A",
+   "region_label": "New England",
+   "kinds": [
+    "micropolitan",
+    "rural"
+   ],
+   "markets": 22,
+   "share_of_votes": 0.0074,
+   "share_of_estimate": 0.0046,
+   "ratio": 0.6299
+  },
+  {
+   "region": "1B",
+   "region_label": "Central Atlantic",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 43,
+   "share_of_votes": 0.1493,
+   "share_of_estimate": 0.0303,
+   "ratio": 0.2032
+  },
+  {
+   "region": "1B",
+   "region_label": "Central Atlantic",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 39,
+   "share_of_votes": 0.0102,
+   "share_of_estimate": 0.017,
+   "ratio": 1.6737
+  },
+  {
+   "region": "1B",
+   "region_label": "Central Atlantic",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 17,
+   "share_of_votes": 0.003,
+   "share_of_estimate": 0.0057,
+   "ratio": 1.8715
+  },
+  {
+   "region": "1C",
+   "region_label": "Lower Atlantic",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 84,
+   "share_of_votes": 0.184,
+   "share_of_estimate": 0.1598,
+   "ratio": 0.8687
+  },
+  {
+   "region": "1C",
+   "region_label": "Lower Atlantic",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 68,
+   "share_of_votes": 0.0133,
+   "share_of_estimate": 0.0423,
+   "ratio": 3.1917
+  },
+  {
+   "region": "1C",
+   "region_label": "Lower Atlantic",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 72,
+   "share_of_votes": 0.0116,
+   "share_of_estimate": 0.0303,
+   "ratio": 2.6136
+  },
+  {
+   "region": "2",
+   "region_label": "Midwest",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 115,
+   "share_of_votes": 0.1891,
+   "share_of_estimate": 0.1026,
+   "ratio": 0.5425
+  },
+  {
+   "region": "2",
+   "region_label": "Midwest",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 197,
+   "share_of_votes": 0.0318,
+   "share_of_estimate": 0.0668,
+   "ratio": 2.1021
+  },
+  {
+   "region": "2",
+   "region_label": "Midwest",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 201,
+   "share_of_votes": 0.0231,
+   "share_of_estimate": 0.0603,
+   "ratio": 2.6134
+  },
+  {
+   "region": "3",
+   "region_label": "Gulf Coast",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 64,
+   "share_of_votes": 0.1096,
+   "share_of_estimate": 0.1076,
+   "ratio": 0.9825
+  },
+  {
+   "region": "3",
+   "region_label": "Gulf Coast",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 107,
+   "share_of_votes": 0.0137,
+   "share_of_estimate": 0.0323,
+   "ratio": 2.3571
+  },
+  {
+   "region": "3",
+   "region_label": "Gulf Coast",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 91,
+   "share_of_votes": 0.0101,
+   "share_of_estimate": 0.0179,
+   "ratio": 1.7708
+  },
+  {
+   "region": "4",
+   "region_label": "Rocky Mountain",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 21,
+   "share_of_votes": 0.0269,
+   "share_of_estimate": 0.0429,
+   "ratio": 1.5965
+  },
+  {
+   "region": "4",
+   "region_label": "Rocky Mountain",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 30,
+   "share_of_votes": 0.0042,
+   "share_of_estimate": 0.0102,
+   "ratio": 2.4339
+  },
+  {
+   "region": "4",
+   "region_label": "Rocky Mountain",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 53,
+   "share_of_votes": 0.0034,
+   "share_of_estimate": 0.0105,
+   "ratio": 3.0954
+  },
+  {
+   "region": "5",
+   "region_label": "West Coast",
+   "kinds": [
+    "metropolitan"
+   ],
+   "markets": 46,
+   "share_of_votes": 0.155,
+   "share_of_estimate": 0.219,
+   "ratio": 1.4132
+  },
+  {
+   "region": "5",
+   "region_label": "West Coast",
+   "kinds": [
+    "micropolitan"
+   ],
+   "markets": 32,
+   "share_of_votes": 0.0063,
+   "share_of_estimate": 0.0255,
+   "ratio": 4.0458
+  },
+  {
+   "region": "5",
+   "region_label": "West Coast",
+   "kinds": [
+    "rural"
+   ],
+   "markets": 20,
+   "share_of_votes": 0.0015,
+   "share_of_estimate": 0.0077,
+   "ratio": 5.066
+  }
+ ],
+ "who": {
+  "median_household_income": {
+   "average_voter": 85074.087,
+   "estimate": 72060.3609
+  },
+  "college_share": {
+   "average_voter": 0.3609,
+   "estimate": 0.2827
+  },
+  "republican_share_2024": {
+   "average_voter": 50.5952,
+   "estimate": 57.361
+  },
+  "exposure": {
+   "average_voter": 1.0578,
+   "estimate": 1.2678
+  }
+ },
+ "by_kind": {
+  "metropolitan": {
+   "share_of_votes": 0.8605,
+   "share_of_estimate": 0.6687
+  },
+  "micropolitan": {
+   "share_of_votes": 0.0841,
+   "share_of_estimate": 0.1965
+  },
+  "rural": {
+   "share_of_votes": 0.0554,
+   "share_of_estimate": 0.1348
+  }
+ },
+ "concentration": {
+  "n_counties": 2782,
+  "top_100_counties": 0.5199,
+  "effective_counties": 133.098,
+  "effective_counties_by_votes": 313.5073
+ },
+ "largest_differences": {
+  "half_of_estimate_above_cents": 11.189,
+  "half_of_estimate_above_dollars": 8.168,
+  "top_fifth_of_markets_share_of_estimate": 0.6052
+ }
+}

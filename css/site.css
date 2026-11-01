@@ -1,0 +1,513 @@
+/* Token system: "Two inks" look (DESIGN.md, 2026-10-29).
+   main.js reads CSS vars into window.THEME at startup; modules read THEME, never the CSS variables.
+   Grouped by role (DESIGN.md palette table). */
+:root {
+  /* --- surface and text --- */
+  --paper: #F7F3EC;
+  --bg: var(--paper);
+  --ink: #1E1B22;
+  --muted: #5D5862;
+  --rule: #D9D2C7;
+
+  /* --- two inks --- */
+  --ink-a: #EA8A00;              /* amber: exposure and extra fuel cost */
+  --ink-a-deep: #B86A00;         /* amber for small marks and strokes: 3.72:1 on paper */
+  --ink-b: #5E36C9;              /* violet: prices */
+  --overprint: #561D00;          /* A over B at full strength */
+
+  /* --- accent (what the comparison uses) --- */
+  --accent: #0F6B66;
+  --accent-soft: #D5E8E4;
+
+  /* --- partisan direction --- */
+  --rep: #B2423A;
+  --dem: #2F5D9B;
+
+  /* --- burden ramp (single-ink exposure and extra-fuel-cost) --- */
+  --burden-0: #F5E2BF;          /* light end */
+  --burden-1: #EA8A00;          /* mid (= ink-a) */
+  --burden-2: #561D00;          /* dark end (= overprint) */
+
+  /* --- price ramp (violet) and low price (slate) --- */
+  --price-0: #E9E2F8;           /* soft violet */
+  --price-1: #5E36C9;           /* main violet (= ink-b) */
+  --price-low: #6E7486;         /* slate */
+
+  /* --- diverge ramp (price deviations: violet above, slate below) --- */
+  --diverge-pos: #5E36C9;
+  --diverge-mid: #EEE9E1;
+  --diverge-neg: #6E7486;
+
+  /* --- set-aside (warm grays) --- */
+  --setaside-1: #8E8780;
+  --setaside-2: #CFC8BD;
+
+  /* --- region identity (PADD_COLORS, chroma reduced ~15%) --- */
+  --padd-1a: #6A7D9E;           /* New England */
+  --padd-1b: #4D939F;           /* Central Atlantic */
+  --padd-1c: #7A9E76;           /* Lower Atlantic */
+  --padd-2:  #B89D58;           /* Midwest */
+  --padd-3:  #AD7558;           /* Gulf Coast */
+  --padd-4:  #93769E;           /* Rocky Mountain */
+  --padd-5:  #5C886A;           /* West Coast */
+
+  /* --- figure-specific roles (re-derived in warm-gray / palette) --- */
+  --fig-set-aside: #8E8780;     /* warm gray: what exposure alone predicts (= setaside-1) */
+  --fig-adj: #3D3840;           /* the four adjustments (warm dark) */
+  --fig-rust: #6E7486;          /* negative deviations (= price-low slate) */
+  --fig-plum: #6E5CA0;          /* v6 adjustments colour (warmer violet) */
+  --fig-amber: #EA8A00;         /* v6 exposure-alone colour (= ink-a) */
+  --fig-calm: #918A84;          /* calm neutral in dot key (warm) */
+  --fig-pale: #CFC8BD;          /* pale neutral for dot key (= setaside-2) */
+  --fig-grey-bar: #C2BAB0;      /* charts.js bar background (warm) */
+
+  /* --- market-kind colours (warm neutrals) --- */
+  --fig-metro: #48526A;
+  --fig-metro-fill: #DDD8EE;
+  --fig-micro: #A87A1E;
+  --fig-micro-fill: #F3E5C5;
+  --fig-rural: #5E8656;
+  --fig-rural-fill: #DCE6D4;
+
+  /* --- strip alternation (warm grays) --- */
+  --fig-strip-0: #5D5862;
+  --fig-strip-1: #A09A93;
+
+  /* --- scrollbar (warm) --- */
+  --scrollbar: #B5AFA6;
+  --scrollbar-hover: #918A84;
+
+  /* --- text highlights (matched to figure legends) --- */
+  --hl-zero: #EBE6DF;           /* close to zero (warm) */
+  --hl-effect: #D5E8E4;         /* a clear effect (= accent-soft) */
+  --text-burden-hi: #561D00;    /* overprint, used in text .k-hi */
+  --text-burden-lo: #9A5300;    /* ochre for burden light end in text .k-lo */
+  --text-price: #5E36C9;        /* price violet in text .k-m2 (= ink-b) */
+
+  /* --- red ramp (vis_dots partisanship placebo, warm) --- */
+  --fig-red-0: #F5E4E0;
+  --fig-red-1: #D0807A;
+  --fig-red-2: #832520;
+
+  /* --- equation boxes (warm grays) --- */
+  --fig-eq-out: #7A7470;
+  --fig-eq-race: #AEA8A0;
+
+  /* --- misc figure greys (warm) --- */
+  --fig-bar-alt-0: #CFC8BD;     /* adjustment strip even (= setaside-2) */
+  --fig-bar-alt-1: #DDD8D0;     /* adjustment strip odd */
+  --fig-inkg-line: #CFC8BD;     /* equation glyph lanes */
+  --fig-faded-bar: #AEA8A0;     /* comparison bar faded */
+  --fig-overview-mut: #968F88;  /* overview tile muted (warm) */
+  --fig-amber-dark: #8A4A12;    /* dark amber for state highlight */
+  --fig-glyph-soft: #D9D2C7;    /* overview glyph light gray (= rule) */
+
+  /* --- fonts: Vollkorn (body/display) + Barlow (labels) --- */
+  --font-body: Vollkorn, Charter, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-display: Vollkorn, Georgia, serif;
+  --font-label: Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Canvas and SVG measurement stacks */
+  --font-label-canvas: Barlow, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-label-short: Barlow, system-ui, sans-serif;
+  --font-label-charts: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif-canvas: Vollkorn, Georgia, serif;
+  --font-serif-full: Vollkorn, Georgia, serif;
+  --font-label-face: "Barlow";
+  --font-fallback: sans-serif;
+  /* aliases */
+  --serif: var(--font-body);
+  --sans: var(--font-label);
+
+  /* Roller multipliers */
+  --dot-scale: 1;
+  --dot-alpha: 1;
+  --dot-stroke: 1.1;            /* DESIGN.md: outlined dots by default */
+  --dot-halftone: 0;
+  --label-weight: 600;
+  --chart-weight: 2.8;          /* DESIGN.md: about 1.4x today's 2 */
+  --grain-opacity: 0;
+  --grain-freq: 0;
+  --on-accent: #ffffff;
+
+  /* --- interface effects (re-derived from palette) --- */
+  --tap-highlight: rgba(15, 107, 102, .15);
+  --link-underline: rgba(15, 107, 102, .45);
+  --ink-shadow-soft: rgba(30, 27, 34, .12);
+  --tooltip-shadow: rgba(30, 27, 34, .22);
+  --menu-shadow: rgba(30, 27, 34, .14);
+  --overview-tap-highlight: rgba(15, 107, 102, .12);
+  --overview-hover-shadow: rgba(15, 107, 102, .16);
+  --mask-opaque: #000;
+  --overview-read-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%230F6B66'/%3E%3Cpath d='M4 8l3 3 5-6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  /* --- layout --- */
+  --measure: 34rem;
+  --bar-h: 2.75rem;             /* taller bar for labels-above-line part bar */
+  --tp-overlap: 40svh;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scrollbar-color: var(--scrollbar) var(--bg); scrollbar-width: thin; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 1.1875rem; line-height: 1.6; font-optical-sizing: auto; caret-color: var(--accent); -webkit-tap-highlight-color: var(--tap-highlight); }
+::selection { background: var(--accent-soft); color: var(--ink); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border: 2px solid var(--bg); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+a { color: var(--accent); text-decoration-line: underline; text-decoration-thickness: 1px; text-decoration-color: var(--link-underline); text-underline-offset: .2em; }
+a:hover { text-decoration-color: currentColor; text-decoration-thickness: 1.5px; }
+h1, h2 { text-wrap: balance; font-weight: 600; margin: 0; }
+p { text-wrap: pretty; }
+em { font-style: italic; }
+
+.skip { position: absolute; left: .75rem; top: -4rem; z-index: 100; background: var(--ink); color: var(--bg); font: 500 .875rem var(--sans); padding: .5rem .75rem; border-radius: 3px; }
+.skip:focus { top: .75rem; }
+.noscript { padding: 1rem 1.5rem; font: 400 .9375rem var(--sans); color: var(--muted); }
+
+/* ---------- title page ---------- */
+/* One screen: name, question, lede and author on the left, the map with its key and the "Scroll to begin" cue on the right (desktop);
+   on a phone the order is name, question, map, lede, author, cue. The map itself is drawn on the fixed canvas #tp-map (main.js); .tp-stage only
+   holds its place in the flow. The story below overlaps the bottom of this block by --tp-overlap (see #story), so the first beat arrives while the
+   map is still handing over to the panel instead of after a blank stretch. */
+.tp { position: relative; z-index: 7; pointer-events: none; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; min-height: 100vh; min-height: 100svh;
+  padding: clamp(1.25rem, 4svh, 2.5rem) clamp(1.25rem, 5vw, 4.5rem) 0; }
+.tp a, .tp-name, .tp-side { pointer-events: auto; }
+@media (max-width: 899px) { .tp { z-index: 11; } }   /* on a phone the title page lies over the sticky figure panel (#visual, z-index 10), or the panel takes the taps on its links */
+.tp-name, .tp-side { opacity: var(--tp-text, 1); }
+.titlepage { display: contents; }
+/* v7: the question is the title; "Two inks" variant A: Vollkorn 600, tight leading, heavy rule */
+.tp-name { grid-row: 1; font-family: var(--font-display); font-size: clamp(1.625rem, 6.6vw, 2.25rem); line-height: 1.04; letter-spacing: -.018em; font-weight: 600; text-wrap: balance; padding-bottom: .9rem; margin-bottom: clamp(1rem, 3svh, 2rem); border-bottom: 4px solid var(--ink); }
+.tp-side { grid-row: 4; padding-top: 1.25rem; }
+/* phone (critique T2): main.js sets --tp-cut, the map's lower edge in the block's own coordinates; the lines above it are under the map and are cut off */
+.tp-side { -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--tp-cut, -100px) - 14px), var(--mask-opaque) var(--tp-cut, -100px)); mask-image: linear-gradient(to bottom, transparent calc(var(--tp-cut, -100px) - 14px), var(--mask-opaque) var(--tp-cut, -100px)); }
+.tp-lede { font-size: 1.0625rem; line-height: 1.52; max-width: var(--measure); margin: 0 0 .9rem; text-wrap: pretty; overflow-wrap: break-word; }
+.tp-author { font: 400 .8125rem/1.55 var(--sans); color: var(--muted); max-width: 40rem; margin: 0; }
+.tp-author a { color: var(--ink); text-decoration-color: var(--muted); }
+.tp-author a:hover { color: var(--accent); }
+.tp-author a.ph { color: var(--muted); text-decoration-style: dotted; }
+.tp-hero { grid-row: 3; }
+.tp-figure { margin: 0 -1.25rem; width: auto; }
+.tp-stage { width: 100%; aspect-ratio: var(--tp-aspect, 1.6); }
+.tp-cap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .35rem 2rem; padding: .6rem 1.25rem .2rem; font: 400 .875rem/1.45 var(--sans); color: var(--muted); opacity: var(--tp-capo, 1); }
+.tp-key { display: inline-flex; align-items: center; gap: .5rem; white-space: nowrap; }
+.tp-ramp { display: inline-block; width: 7.5rem; height: .6rem; border-radius: 1px; background: linear-gradient(90deg, var(--burden-0), var(--burden-1), var(--burden-2)); box-shadow: inset 0 0 0 1px var(--ink-shadow-soft); }
+.tp.no-map .tp-figure { display: none; }
+.tp-begin { grid-row: 5; justify-self: start; position: relative; display: inline-flex; align-items: center; gap: .6rem; font: 500 .9375rem/1 var(--sans); color: var(--ink); text-decoration: none; padding: .75rem 0 1.5rem; opacity: var(--tp-cue, 1); }
+.tp-begin:hover { color: var(--accent); }
+.tp.past .tp-begin, .tp.past .tp-cap { visibility: hidden; }
+#tp-map { position: fixed; left: 0; top: 0; z-index: 5; pointer-events: none; }
+@media (min-width: 900px), (orientation: landscape) and (max-height: 500px) {
+  .tp { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); grid-template-rows: auto auto auto 1fr auto; column-gap: clamp(2rem, 4.5vw, 5rem); padding-top: clamp(1.5rem, 5svh, 3rem); }
+  .tp-name { grid-column: 1 / -1; font-size: clamp(2.5rem, 3.6vw, 3.5rem); }
+  .tp-side { grid-column: 1; grid-row: 2 / 4; padding-top: clamp(.25rem, 1svh, .75rem); }
+  .tp-hero { grid-column: 2; grid-row: 2 / 5; align-self: center; padding-bottom: 2rem; }
+  .tp-begin { grid-column: 1; grid-row: 4; align-self: start; }   /* directly under the author block (v7.2) */
+  .tp-figure { margin: 0 auto; width: min(100%, 1600px, calc(var(--tp-aspect, 1.6) * (100svh - 13rem))); }
+  .tp-cap { padding: .7rem 0 .2rem; }
+  .tp-lede { font-size: clamp(1.0625rem, 1.2vw, 1.25rem); }
+  .tp-author { font-size: .875rem; }
+}
+@media (min-width: 1100px) { .tp { grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr); } }
+/* wide screens: the title keeps growing past 1800px */
+@media (min-width: 1800px) {
+  .tp-name { font-size: clamp(3.5rem, 3.6vw, 5rem); }
+  .tp-lede { font-size: clamp(1.3125rem, 1.15vw, 1.5rem); max-width: 40rem; }
+  .tp-author { font-size: 1rem; max-width: 46rem; }
+  .tp-begin { font-size: 1.0625rem; }
+}
+/* short screens: tighter title block so that map, key and cue stay in the first screen */
+@media (min-width: 900px) and (max-height: 760px) {
+  .tp { padding-top: 1rem; }
+  .tp-name { font-size: clamp(1.625rem, 2.6vw, 2.4rem); padding-bottom: .5rem; margin-bottom: .9rem; }
+  .tp-side { padding-top: .7rem; }
+  .tp-lede { font-size: 1rem; line-height: 1.5; margin-bottom: .6rem; }
+  .tp-author { font-size: .8125rem; line-height: 1.5; }
+  .tp-begin { padding: .4rem 0 .9rem; }
+  .tp-figure { width: min(100%, 1600px, calc(var(--tp-aspect, 1.6) * (100svh - 9.5rem))); }
+}
+
+
+/* ---------- scroll story ---------- */
+#story { position: relative; margin-top: calc(-1 * var(--tp-overlap)); }
+#layout { display: flex; align-items: flex-start; }
+/* the top padding equals the trigger line in main.js (GEOM.desk.trig = 0.78): the first beat becomes current as the panel pins */
+#text { position: relative; z-index: 6; flex: 0 0 46%; padding: 112vh 1.5rem 0 1.25rem; }
+#visual { font-family: var(--sans); flex: 1 1 auto; position: sticky; top: var(--bar-h); height: 100vh; height: calc(100vh - var(--bar-h)); min-width: 0; border-left: none; background: var(--bg); }
+/* v7.2 (critique S6): the drawing area is capped at 1100px and centred; modules read the capped size (state.w) and the title map hands off into it */
+#panel { position: absolute; inset: 0; width: min(100%, 1100px); margin-inline: auto; overflow: hidden; }
+
+/* block tops 120vh apart (140vh for dense beats): a build (p 0.05-0.45) gets about 48vh of scroll and ends with the block's top near 24% of the screen.
+   A part heading adds no margin: it would lengthen the previous beat, whose build would then end higher on the screen. */
+.beat { max-width: 31rem; margin-left: auto; min-height: 120vh; padding-bottom: 30vh; }   /* PI 2026-10-30: the text sits close to the figure */
+.beat.long { min-height: 140vh; }
+/* beats whose figure runs a long sequence: five reshuffles; four build stages */
+#b-test { min-height: 160vh; }   /* v7.2 (critique 6.1): was 200vh */
+#b-past-estimates { min-height: 180vh; }
+/* v9.4: beats whose figure runs a slow, multi-part animation get more scroll, so the movement is never rushed */
+#b-price-local, #b-simple { min-height: 160vh; }
+#b-ideal-shuffle, #b-nearby-intro { min-height: 180vh; }
+#b-both-sides-remove { min-height: 170vh; }
+#b-fluke-reshuffle { min-height: 400vh; }   /* PI 2026-10-29: eight reshuffles at the old pace (was 260vh, five) */
+#b-fluke-reshuffle .beat-body { position: sticky; top: 30vh; }   /* PI 2026-10-30: the text holds while the reshuffles run */
+.part-title { font-family: var(--font-display); font-size: clamp(1.625rem, 2.4vw, 2.125rem); font-weight: 600; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 1.1rem; max-width: var(--measure); }
+.beat-body { max-width: var(--measure); }
+.beat-body p { margin: 0 0 1em; }
+.beat-body > p { font-size: 1.3125rem; }   /* PI 2026-10-30: the running text only; expandables keep their size */
+.beat-body p:last-child { margin-bottom: 0; }
+/* the-question (PI, 2026-10-29): the two groups compared take the colors of the extra-fuel-cost legend, dark end and light end. Text color: the
+   legend's dark end as is; its light end (--burden-0) is too pale for text, so `less` uses the ramp's orange darkened to an ochre (contrast about 5:1). */
+.k-hi { color: var(--text-burden-hi); font-weight: 600; }
+.k-lo { color: var(--text-burden-lo); font-weight: 600; }
+/* both-sides-line (PI, 2026-10-29): Market 2 in the violet of its dots in the group figure (T.price[1]) */
+.k-m2 { color: var(--text-price); font-weight: 600; }
+/* scope-outcomes (PI, 2026-10-29): the two outcomes on the highlights of their figure labels */
+.hl-zero, .hl-effect { padding: 0 .12em; margin: 0 -.04em; border-radius: 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.hl-zero { background: var(--hl-zero); }
+.hl-effect { background: var(--hl-effect); }
+.beat:focus { outline: none; }
+#text a, #text summary, #text .term { scroll-margin-top: calc(var(--bar-h) + 1rem); }   /* focus scrolling keeps links clear of the part bar */
+/* skip link and back link: small, muted, inline links set off from the reader text; they are not buttons */
+.beat-body p:has(> .skip-link) { margin: 0 0 1.4em; }
+.beat-body p:has(> .skip-link.skip-back) { margin: 1.4em 0 0; }
+.skip-link { font: 400 .875rem/1.5 var(--sans); color: var(--muted); text-decoration-line: underline; text-decoration-color: var(--rule); text-decoration-thickness: 1px; text-underline-offset: .25em; }
+.skip-link:hover { color: var(--accent); text-decoration-color: currentColor; }
+.skip-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* the button that opens a group of beats (main.js, RUNS): it reads like the summary of an expandable */
+.beat-body p:has(> .run-btn) { margin: 1.25rem 0 0; padding-top: .7rem; border-top: 1px solid var(--rule); }
+.run-btn { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; display: flex; gap: .55rem; align-items: baseline; color: var(--accent); font: 500 .9375rem/1.5 var(--sans); text-align: left; }
+.run-btn::before { content: ''; flex: none; width: .42rem; height: .42rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-.12em) rotate(-45deg); }
+.run-btn[aria-expanded="true"]::before { transform: translateY(-.2em) rotate(45deg); }
+.run-btn:hover { text-decoration: underline; text-underline-offset: .2em; text-decoration-thickness: 1px; }
+.run-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+details { margin: 1.25rem 0 0; padding-top: .7rem; border-top: 1px solid var(--rule); font-size: 1rem; line-height: 1.6; }
+summary { cursor: pointer; list-style: none; display: flex; gap: .55rem; align-items: baseline; color: var(--accent); font: 500 .9375rem/1.5 var(--sans); }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: ''; flex: none; width: .42rem; height: .42rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-.12em) rotate(-45deg); }
+details[open] > summary::before { transform: translateY(-.2em) rotate(45deg); }
+summary:hover { text-decoration: underline; text-underline-offset: .2em; text-decoration-thickness: 1px; }
+details p { margin: .6rem 0 0; }
+details table { width: 100%; margin: .6rem 0 0; border-collapse: collapse; font: 400 .9375rem/1.4 var(--sans); font-variant-numeric: tabular-nums; }
+details th, details td { padding: .3rem 0 .3rem .75rem; text-align: right; border-bottom: 1px solid var(--rule); }
+details th:first-child, details td:first-child { padding-left: 0; text-align: left; }
+details th { font-weight: 500; color: var(--muted); vertical-align: bottom; }
+
+.term { border-bottom: 1px dotted var(--accent); cursor: help; position: relative; }
+.term:focus-visible { outline-offset: 2px; background: var(--accent-soft); }
+.tip { display: none; position: fixed; z-index: 70; width: 17rem; max-width: calc(100vw - 1rem); background: var(--ink); color: var(--bg); font: 400 .8125rem/1.5 var(--sans); padding: .6rem .75rem; border-radius: 2px; box-shadow: 0 6px 18px var(--tooltip-shadow); }
+.term.show .tip { display: block; }
+
+/* ---------- part bar ---------- */
+/* Fixed at the top once the story starts. The pinned figure panel sits below it (#visual top / height use --bar-h). Desktop: one labelled segment
+   per part, widths set in main.js (scroll length, with a floor for the label). Phone: a bare line plus one button that opens the list of parts. */
+/* Part bar: connected line with stops, labels above (DESIGN.md) */
+#parts { position: fixed; left: 0; right: 0; top: 0; height: var(--bar-h); z-index: 60; background: var(--bg); padding: 0 clamp(1.25rem, 4.5vw, 4rem); opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s; }
+#parts.on { opacity: 1; visibility: visible; transition-delay: 0s; }
+#parts button { font: 500 13px/1 var(--sans); color: var(--muted); background: none; border: 0; padding: 0; margin: 0; cursor: pointer; -webkit-appearance: none; appearance: none; }
+#parts button:focus-visible { outline-offset: -2px; }
+.parts-track { list-style: none; margin: 0; padding: 0; height: 100%; display: flex; gap: 4px; align-items: stretch; }
+.parts-track li { position: relative; flex: 1 1 0; min-width: 0; }
+/* labels above the line, stops on it: all three layers (label, line, stop) absolutely positioned */
+#parts .seg { position: relative; display: block; width: 100%; height: 100%; text-align: left; padding: 0; }
+.seg .lab { position: absolute; top: 0; left: 0; right: 0; bottom: 20px; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .15s ease; }
+/* the connecting line at the bottom: 5px up for the stop margin, +4px for half-stop = bottom 9px */
+.seg::before, .seg .fill { content: ''; position: absolute; left: 0; right: 0; bottom: 9px; height: 2px; }
+.seg::before { background: var(--rule); }
+.seg .fill { background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); will-change: transform; }
+/* stop dots: absolutely positioned, centered on the line */
+.seg::after { content: ''; position: absolute; z-index: 2; left: 0; bottom: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--rule); border: 2px solid var(--bg); }
+.seg:hover .lab { color: var(--ink); }
+.seg.cur .lab { color: var(--ink); }
+.seg.done .lab { color: var(--muted); }
+.seg.done::after { background: var(--accent); }
+.seg.cur::after { background: var(--accent); width: 10px; height: 10px; bottom: 4px; left: -1px; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent); }
+#parts .parts-now, #parts-menu { display: none; }
+@media (prefers-reduced-motion: reduce) { #parts, .seg .lab { transition: none; } }
+
+/* ---------- figure panel ---------- */
+.mod { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+.mod.live { visibility: visible; }
+.mod.own { pointer-events: auto; }
+#ph { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 2rem; text-align: center; font: 400 .875rem/1.5 var(--sans); color: var(--muted); }
+#ph.on { display: flex; }
+#load-error { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 90; font: 400 .875rem/1.45 var(--sans); color: var(--bg); background: var(--ink); padding: .6rem .9rem; border-radius: 3px; }
+#load-error[hidden] { display: none; }
+
+/* ---------- scene (scene.js) ---------- */
+.sc-layer { position: absolute; inset: 0; }
+.sc-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.sc-svg text { font-family: var(--sans); }
+.sc-map { position: absolute; display: block; pointer-events: none; }
+.sc-cap { position: absolute; font: 400 .75rem/1.3 var(--sans); color: var(--muted); background: var(--bg); padding: 0 3px; margin-left: -3px; pointer-events: none; }
+
+/* ---------- source line (window.sourceLine in main.js): one grey line at the foot of every chart ---------- */
+.source-line { font-family: var(--sans); font-size: 12px; font-weight: 400; fill: var(--muted); color: var(--muted); pointer-events: none; }
+div.source-line { position: absolute; left: 12px; bottom: 5px; line-height: 1.3; }
+
+/* ---------- phone ---------- */
+@media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
+  body { font-size: 1rem; }
+  :root { --tp-overlap: 28svh; }
+  .tp-name { font-size: clamp(1.5rem, 6.4vw, 2rem); }
+  #tp-map { z-index: 12; }
+  #text { z-index: auto; }
+  #layout { flex-direction: column; align-items: stretch; }
+  #visual { order: -1; flex: none; width: 100%; height: calc(52vh - var(--bar-h)); height: calc(52svh - var(--bar-h)); z-index: 10; border-left: 0; border-bottom: 1px solid var(--rule); }
+  /* the top padding puts the first block at the phone trigger line (GEOM.phone.trig = 1.15) as the 52svh panel pins */
+  #text { flex: none; padding: 36vh 1.25rem 0; padding-top: calc(115vh - 52svh + var(--bar-h)); }
+  /* the text is read in the band under the panel (52-100% of the screen): a build ends with the block's top near the panel's lower edge */
+  .beat { max-width: none; margin-left: 0; min-height: 82vh; padding-bottom: 20vh; background: var(--bg); }
+  .beat.long { min-height: 90vh; }
+  #b-test { min-height: 130vh; }
+  #b-past-estimates { min-height: 120vh; }
+  #b-price-local, #b-simple { min-height: 115vh; }
+  #b-ideal-shuffle, #b-nearby-intro, #b-both-sides-remove { min-height: 125vh; }
+  #b-fluke-reshuffle { min-height: 280vh; }
+  #b-fluke-reshuffle .beat-body { top: calc(52svh + .75rem); }
+  .part-title { font-size: 1.5rem; }
+  .beat-body > p { font-size: 1.125rem; }
+}
+
+/* compact part bar, including short landscape */
+@media (max-width: 899px) {
+  .parts-track li { min-width: 0 !important; }
+}
+@media (max-width: 899px), (orientation: landscape) and (max-height: 500px) {
+  #parts { padding: 0 1.25rem; }
+  .parts-track { position: absolute; left: 1.25rem; right: 1.25rem; bottom: 0; height: 2px; }
+  #parts .seg { padding: 0; }
+  .seg .lab { display: none; }
+  /* Move text up: align to top of bar, leaving room for the ring centered on the track line at the bottom */
+  #parts .parts-now { display: flex; align-items: flex-start; gap: .5rem; height: calc(100% - 2px); max-width: 100%; color: var(--ink); font-size: .8125rem; padding-top: 6px; }
+  .parts-now-text { font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #parts .parts-now { position: relative; }
+  #parts .parts-now::after { content: ''; position: absolute; inset: -7px -8px; }   /* a 44px-tall tap area on the 32px bar */
+  .parts-chev { flex: none; width: .42rem; height: .42rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-.12em) rotate(45deg); color: var(--muted); transition: transform .15s ease; }
+  #parts.open .parts-chev { transform: translateY(.1em) rotate(-135deg); }
+  #parts-menu { display: block; position: absolute; left: 0; right: 0; top: 100%; list-style: none; margin: 0; padding: .25rem 0 .5rem; background: var(--bg); box-shadow: 0 1px 0 var(--rule), 0 10px 24px var(--menu-shadow); }
+  #parts-menu[hidden] { display: none; }
+  #parts .item { display: flex; align-items: center; width: 100%; min-height: 44px; text-align: left; padding: .6rem 1.25rem; font-size: .9375rem; color: var(--muted); }
+  #parts .item.cur { color: var(--ink); font-weight: 600; }
+}
+
+/* ---------- short landscape ---------- */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --tp-overlap: 0svh; }
+  body { font-size: 1rem; }
+  .tp { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 1rem; padding: 1rem; padding-left: calc(1rem + env(safe-area-inset-left, 0px)); padding-right: calc(1rem + env(safe-area-inset-right, 0px)); }
+  .tp-name { font-size: clamp(1.625rem, 3.6vw, 2rem); padding-bottom: .5rem; margin-bottom: .9rem; }
+  .tp-side { grid-row: 2; padding-top: 0; }
+  .tp-hero { grid-row: 2 / 4; align-self: start; padding-bottom: 0; }
+  .tp-figure { width: 100%; }
+  .tp-lede { font-size: 1rem; line-height: 1.5; margin-bottom: .6rem; }
+  .tp-author { font-size: .8125rem; line-height: 1.5; }
+  .tp-begin { grid-row: 3; padding: .75rem 0 0; }
+  #layout { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  #text { flex: 1 1 0; min-width: 0; padding: 112vh 1rem 0; }
+  #visual { flex: 0 0 54%; max-width: 515px; height: calc(100vh - var(--bar-h)); height: calc(100dvh - var(--bar-h)); }
+  .beat-body > p { font-size: 1.0625rem; }
+  .part-title { font-size: 1.5rem; }
+  #parts { padding-left: calc(1.25rem + env(safe-area-inset-left, 0px)); padding-right: calc(1.25rem + env(safe-area-inset-right, 0px)); }
+  .parts-track { left: calc(1.25rem + env(safe-area-inset-left, 0px)); right: calc(1.25rem + env(safe-area-inset-right, 0px)); }
+  #parts-menu { max-height: calc(100vh - var(--bar-h)); max-height: calc(100dvh - var(--bar-h)); overflow-y: auto; }
+  #parts .item { padding-left: calc(1.25rem + env(safe-area-inset-left, 0px)); padding-right: calc(1.25rem + env(safe-area-inset-right, 0px)); }
+}
+
+/* touch: controls shorter than 44px get an invisible tap area; nothing moves */
+@media (pointer: coarse) {
+  .run-btn, summary { position: relative; }
+  .run-btn::after, summary::after { content: ''; position: absolute; inset: -.7rem 0; }
+  .to-overview::after { content: ''; position: absolute; inset: -11px -8px; }
+}
+
+/* ---------- method overview (v6.3) ---------- */
+/* Beat method-map. At 900px and wider the figure panel carries the overview (tiles drawn by js/dots_panels.js, panel "overview"), so the in-text list
+   is hidden; below 900px the list is the interface and the panel only shows the six band labels. */
+.mm { margin: 1.5em 0 0; font-family: var(--sans); }
+/* Critique S7: at 900px and wider the list is out of sight but still reachable by Tab (display: none would remove it from the tab order). While focus is
+   inside it, it opens as a compact list in the text column; the beat's minimum height absorbs the extra length, so the blocks below do not move. */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 500px) {
+  .mm { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
+  .mm:focus-within { position: static; width: auto; height: auto; margin: 1.25em 0 0; padding: 0; overflow: visible; clip-path: none; }
+  .mm:focus-within .mm-band { margin: 0 0 .45rem; }
+  .mm:focus-within .mm-band-t { padding-bottom: .15rem; font-size: .75rem; }
+  .mm:focus-within a.mm-tile { grid-template-columns: 1.5rem minmax(0, 1fr); min-height: 0; margin: 0; padding: .2rem .3rem; border-color: transparent; background: none; row-gap: 0; }
+  .mm:focus-within .mm-n { width: 1.3rem; height: 1.3rem; font-size: .75rem; }
+  .mm:focus-within .mm-t { font-size: .9375rem; }
+  .mm:focus-within .mm-d, .mm:focus-within .mm-time, .mm:focus-within a.mm-tile.read::after { display: none; }
+  .mm:focus-within a.mm-tile:hover { color: var(--accent); }
+}
+.mm-band { margin: 0 0 1.1rem; }
+.mm-band-t { display: block; font: 500 .8125rem/1.3 var(--sans); color: var(--muted); padding: 0 .1rem .35rem; }
+.mm a.mm-tile { position: relative; display: grid; grid-template-columns: 1.9rem minmax(0, 1fr) auto; column-gap: .55rem; row-gap: .1rem; align-items: baseline; min-height: 44px; margin: 0 0 .4rem; padding: .55rem 0 .6rem; border: 0; border-radius: 0; background: var(--bg); color: var(--ink); text-decoration: none; -webkit-tap-highlight-color: var(--overview-tap-highlight); }
+.mm a.mm-tile::before { content: ''; position: absolute; left: .95rem; top: -.4rem; bottom: -.4rem; border-left: 1px solid var(--rule); }
+.mm a.mm-tile:hover, .mm a.mm-tile:active { color: var(--accent); }
+.mm-n { grid-row: 1; grid-column: 1; justify-self: center; align-self: center; position: relative; display: grid; place-items: center; width: 1.65rem; height: 1.65rem; background: var(--bg); color: var(--accent); font: 600 .8125rem/1 var(--sans); font-variant-numeric: tabular-nums; }
+.mm-t { grid-row: 1; grid-column: 2; font: 600 1rem/1.3 var(--sans); }
+.mm-time { grid-row: 1; grid-column: 3; font: 400 .8125rem/1.3 var(--sans); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mm-d { grid-row: 2; grid-column: 2 / 4; font: 400 .875rem/1.4 var(--sans); color: var(--muted); }
+.mm a.mm-tile.read::after { content: ""; position: absolute; left: .8rem; bottom: .1rem; width: .3rem; height: .3rem; border-radius: 50%; background: var(--accent); }
+.mm-tile:focus-visible { outline-offset: 2px; border-radius: 2px; }
+/* the desktop tiles: svg links in the figure panel */
+.mm-a { cursor: pointer; pointer-events: auto; text-decoration: none; transition: transform .18s ease, filter .18s ease; }
+.mm-a .mm-box { transition: stroke .18s ease, fill .18s ease; }
+.mm-a:hover, .mm-a:focus-visible { transform: translateY(-2px); filter: drop-shadow(0 5px 9px var(--overview-hover-shadow)); }
+.mm-a:hover .mm-box, .mm-a:focus-visible .mm-box { stroke: var(--accent); stroke-width: 1.6; }
+.mm-a:not(.mm-sum):hover .mm-box, .mm-a:not(.mm-sum):focus-visible .mm-box { fill: color-mix(in srgb, var(--accent-soft) 28%, var(--bg)); }
+.mm-a { outline: none; }
+.mm-ring { opacity: 0; stroke: var(--accent); stroke-width: 2; pointer-events: none; }
+.mm-a:focus-visible .mm-ring { opacity: 1; }
+.mm-glyph { transform-box: fill-box; transform-origin: center; }
+.mm-a:hover .mm-glyph, .mm-a:focus-visible .mm-glyph { animation: mm-nudge .5s ease-out 1; }
+@keyframes mm-nudge { 0% { transform: translate(var(--gx, 0), var(--gy, 0)) scale(1); } 40% { transform: scale(1.1) rotate(-3deg); } 100% { transform: scale(1) rotate(0); } }
+.mm-tip { opacity: 0; pointer-events: none; transition: opacity .16s ease; filter: drop-shadow(0 4px 8px var(--ink-shadow-soft)); }
+.panel-overview:has(.mm-a[data-k="1"]:is(:hover, :focus-visible)) .mm-tip[data-k="1"],
+.panel-overview:has(.mm-a[data-k="2"]:is(:hover, :focus-visible)) .mm-tip[data-k="2"],
+.panel-overview:has(.mm-a[data-k="3"]:is(:hover, :focus-visible)) .mm-tip[data-k="3"],
+.panel-overview:has(.mm-a[data-k="4"]:is(:hover, :focus-visible)) .mm-tip[data-k="4"],
+.panel-overview:has(.mm-a[data-k="5"]:is(:hover, :focus-visible)) .mm-tip[data-k="5"],
+.panel-overview:has(.mm-a[data-k="6"]:is(:hover, :focus-visible)) .mm-tip[data-k="6"],
+.panel-overview:has(.mm-a[data-k="7"]:is(:hover, :focus-visible)) .mm-tip[data-k="7"],
+.panel-overview:has(.mm-a[data-k="8"]:is(:hover, :focus-visible)) .mm-tip[data-k="8"],
+.panel-overview:has(.mm-a[data-k="9"]:is(:hover, :focus-visible)) .mm-tip[data-k="9"],
+.panel-overview:has(.mm-a[data-k="10"]:is(:hover, :focus-visible)) .mm-tip[data-k="10"],
+.panel-overview:has(.mm-a[data-k="11"]:is(:hover, :focus-visible)) .mm-tip[data-k="11"],
+.panel-overview:has(.mm-a[data-k="12"]:is(:hover, :focus-visible)) .mm-tip[data-k="12"],
+.panel-overview:has(.mm-a[data-k="13"]:is(:hover, :focus-visible)) .mm-tip[data-k="13"] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .mm-a, .mm-a .mm-box, .mm-tip { transition: none; }
+  .mm-a:hover, .mm-a:focus-visible { transform: none; }
+  .mm-a:hover .mm-glyph, .mm-a:focus-visible .mm-glyph { animation: none; }
+}
+
+/* v8: band headings */
+.band-title {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.15rem 0;
+  padding: 0;
+  line-height: 1.25;
+}
+
+/* v8: slice bar overlay */
+.slice-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* v9.4: "Back to the overview" button in the figure aside (main.js placeOverview positions it by a transform) */
+.to-overview { position: absolute; left: 0; top: 0; z-index: 20; display: inline-flex; align-items: center; gap: 5px; font: 500 13px/1.4 var(--sans); color: var(--accent); background: none; border: none; border-radius: 2px; padding: 2px 4px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: var(--link-underline); white-space: nowrap; visibility: hidden; pointer-events: none; transition: transform .18s ease-out; }
+.to-overview.on { visibility: visible; pointer-events: auto; }
+.to-overview:hover, .to-overview:focus-visible { text-decoration-color: currentColor; }
+.to-overview:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.to-overview .short { display: none; }
+@media (max-width: 599px) { .to-overview .long { display: none; } .to-overview .short { display: inline; } }
+@media (prefers-reduced-motion: reduce) { .to-overview { transition: none; } }
