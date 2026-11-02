@@ -99,7 +99,7 @@
     'report-variants': 'Illustrative forest plot of the main estimate and sixteen variations, in three groups: the main variations, alternative outcomes (the last one, turnout, on its own short axis) and an alternative price measure',
     'report-past': 'Forest plot of 2018–2024 estimates and an empty 2026 slot',
     prereg: 'Timeline of the plan and when the results appear',
-    when: 'Timeline: plan and code fixed by November 2, Election Day on November 3, first results on November 5, updated results as states reach 95 percent and a final update at 100 percent (turnout added), then House races in December; the first results are highlighted',
+    when: 'Timeline: plan and code fixed by November 2, Election Day on November 3, first results on November 4, one update about a week later and a final update at 100 percent (turnout added), then House races in December; the first results are highlighted',
     results: 'Timeline with the first results highlighted',
     about: 'Timeline with the first results highlighted'
   };
@@ -522,7 +522,7 @@
     [['Response to market price changes', 0.05], ['Response to the tax-cut relief', 0.11]].forEach(function (q, i) {
       var ln = N(q[0], G.m, ey, G.w - 2 * G.m, { fs: G.fsA + (cp ? 0.5 : 1.5), wt: 600 }), bt = ey + ln.box.h + 4;
       es += grp(ramp(p, q[1], q[1] + 0.12), ln.svg + E('rect', { x: r2(x0), y: r2(bt), width: r2(x1 - x0), height: r2(rh), rx: 3, fill: i ? C.accentSoft : 'none', 'fill-opacity': 0.55, stroke: C.accent, 'stroke-width': 1.2, 'stroke-dasharray': '6 4' }));
-      es += grp(ann(lim ? { p: 1 } : L, 0.27 + 0.05 * i, 0.4 + 0.05 * i), T('estimate from Nov 5', xe(0) - (cp ? 10 : 16), bt + rh / 2 + 5, { fs: G.fsA + 1, fill: C.accent, anchor: 'end', wt: 600, halo: true }));
+      es += grp(ann(lim ? { p: 1 } : L, 0.27 + 0.05 * i, 0.4 + 0.05 * i), T('estimate from Nov 4', xe(0) - (cp ? 10 : 16), bt + rh / 2 + 5, { fs: G.fsA + 1, fill: C.accent, anchor: 'end', wt: 600, halo: true }));
       ey = bt + rh + gapR;
     });
     var ax2 = Math.min(axY, ey - gapR + 22);
@@ -530,7 +530,7 @@
       axisBottom(xe, ax2, [-2, -1, 0, 1, 2], function (v) { return v === 0 ? '0' : sgn(v, 0); }) +
       T('Vote points per extra $10 a month', (x0 + x1) / 2, ax2 + 4 + G.fsT + 3 + 15, { fs: G.fsT, fill: C.muted, anchor: 'middle' }));
     out += es;
-    out += SRC('Source: project estimates, from November 5.');
+    out += SRC('Source: project estimates, from November 4.');
     return out;
   }
 
@@ -843,7 +843,7 @@
         var rh = Math.min(r.h - 10, 64), rt = r.cy - rh / 2;
         s += T('2026', x0 - 12, r.cy + 5, { fs: G.fsA + 1, wt: 700, fill: C.accent, anchor: 'end' });
         s += E('rect', { x: r2(x0), y: r2(rt), width: r2(x1 - x0), height: r2(rh), rx: 3, fill: 'none', stroke: C.accent, 'stroke-width': 1.2, 'stroke-dasharray': '6 4' });
-        s += T(cp ? 'state version: from Nov 5' : '2026 state version: from November 5', (x0 + x1) / 2, r.cy + 5, { fs: G.fsA + 1, wt: 600, fill: C.accent, anchor: 'middle', halo: true });
+        s += T(cp ? 'state version: from Nov 4' : '2026 state version: from November 4', (x0 + x1) / 2, r.cy + 5, { fs: G.fsA + 1, wt: 600, fill: C.accent, anchor: 'middle', halo: true });
       } else if (r.k === 'y') {
         // Kim & Yang: a hatched band, not an estimate; the label sits above it, the note below
         var bh = cp ? 14 : 22, e = ease(b), cyb = r.y + r.h * (cp ? 0.58 : 0.5), bx = xs(KY.band[0]), bw = (xs(KY.band[1]) - bx) * e;
@@ -1313,7 +1313,7 @@
         out += axisBottom(sx, ayO, [-1, 0, 1], function (v) { return v ? sgn(v, 0) : '0'; });
         out += T(r.tip === 'govsen' ? 'Points against governor’s party per $10/month' : 'Turnout points per extra $10/month', G.w / 2, ayO + 40, { fs: 13, anchor: 'middle', fill: C.muted });
       });
-      return out + SRC('Illustrative: made-up numbers until November 5.');
+      return out + SRC('Illustrative: made-up numbers until November 4.');
     }
     var labelW = Math.min(142, (G.w - 2 * G.m) * 0.46), x0 = G.m + labelW, x1 = G.w - G.m - 10;
     var xs = d3.scaleLinear().domain(REP_DOM).range([x0, x1]);
@@ -1333,7 +1333,7 @@
     out += T('Vote points per extra $10/month', G.w / 2, ay + 40, { fs: 13, anchor: 'middle', fill: C.muted });
     if (restore && ladder) out += T('Dot: estimate. Line: 95% range.', G.w / 2, ay + 58, { fs: 11, anchor: 'middle', fill: C.muted });
     if (note) out += N('Further down: less mixing with other differences; wider intervals.', G.m, ay + (restore ? 68 : 47), G.w - 2 * G.m, { fs: 11, halo: false }).svg;
-    out += SRC('Illustrative: made-up numbers until November 5.');
+    out += SRC('Illustrative: made-up numbers until November 4.');
     return out;
   }
   function drawReportTablet(L) {
@@ -1375,7 +1375,7 @@
     body += row(VARIANTS[VARIANTS.length - 1], x, yy + normal / 2, xs, normal);
     body += axisBottom(xs, bot + 4, [-1, 0, 1, 2], function (v) { return v ? sgn(v, 0) : '0'; });
     body += T('Vote points per extra $10/month', G.w / 2, bot + 40, { fs: 13, fill: C.muted, anchor: 'middle' });
-    SRC('Illustrative: made-up numbers until November 5.');
+    SRC('Illustrative: made-up numbers until November 4.');
     return out + grp(smooth(0.45, 1, a), body);
   }
   function drawReport(L) {
@@ -1521,7 +1521,7 @@
         out += grp(Math.min(1, a * 3), s_);
       });
     }
-    out += SRC('Illustrative: made-up numbers until November 5.');
+    out += SRC('Illustrative: made-up numbers until November 4.');
     return out;
   }
 
@@ -1529,15 +1529,15 @@
   var MS = [   // 2026-10-28: the registered dates restored (PI); updates have no fixed date
     { date: 'By Nov 2', what: 'Plan and code fixed', fixed: true },
     { date: 'Tue, Nov 3', what: 'Election Day', ed: true },
-    { date: 'Thu, Nov 5', what: 'First results' },
-    { date: 'As states reach 95%', what: 'Updated results' },
+    { date: 'Wed, Nov 4', what: 'First results' },
+    { date: 'About a week later', what: 'Update' },
     { date: 'All states at 100%', what: 'Final update' },
     { date: 'December', what: 'House races' }
   ];
   function drawTimelinePhone(L) {
     var when = L.beat === 'when', mw = when ? 1 : L.to === 'when' ? L.m : 0;
     var tt = title('Plan and results'), out = tt.svg, rx = G.m + 10, tx = rx + 22;
-    var note = N('At least 95% counted. Slower states, such as California, join later.', tx, 0, G.w - G.m - tx, { fs: 12, halo: false });
+    var note = N('At least 90% counted. Slower states, such as California, join later.', tx, 0, G.w - G.m - tx, { fs: 12, halo: false });
     var extra = (note.box.h + 46) * mw, top = tt.bottom + 12, bot = G.h - 10;
     var sp = (bot - top - extra) / 5, ys = MS.map(function (m, i) { return top + i * sp + (i >= 3 ? extra : 0); });
     out += LN(rx, ys[0], rx, ys[5], { stroke: C.faint, 'stroke-width': 2 });
@@ -1552,7 +1552,7 @@
     });
     if (mw > 0.01) {
       var ny = ys[2] + 17;
-      out += grp(ramp(mw, 0.85, 1), N('At least 95% counted. Slower states, such as California, join later.', tx, ny, G.w - G.m - tx, { fs: 12, halo: false }).svg + ARROW({ x: tx + 6, y: ny + note.box.h + 5 }, { x: tx + 6, y: Math.max(ny + note.box.h + 17, ys[3] - 17) }, { col: 'muted' }));
+      out += grp(ramp(mw, 0.85, 1), N('At least 90% counted. Slower states, such as California, join later.', tx, ny, G.w - G.m - tx, { fs: 12, halo: false }).svg + ARROW({ x: tx + 6, y: ny + note.box.h + 5 }, { x: tx + 6, y: Math.max(ny + note.box.h + 17, ys[3] - 17) }, { col: 'muted' }));
     } else {
       var dy = (ys[0] + ys[1]) / 2;
       var cap = 'Fixed before the election', lx = tx + tw(cap, 11, 600) + 12;
@@ -1569,7 +1569,7 @@
     var aP = cur === 'prereg' ? ramp(L.p, 0.05, 0.2) * (1 - mw) : 0, aW = cur === 'when' ? ann(L, 0.05, 0.2) * (1 - (L.out || 0)) : 0;
     var tt = title('What is fixed in advance, and when the results appear'); out += tt.svg;
     var railX = wide ? G.m + 190 : G.m + 16, tx = railX + (wide ? 26 : 26), fsD = tight ? 12.5 : cp ? 13 : 15, fsW = tight ? 12 : cp ? 12.5 : (wide ? 16 : 14);
-    var noteStr = 'Included once at least 95% of the expected vote is counted. Slower states, such as California, join later.';
+    var noteStr = 'Included once at least 90% of the expected vote is counted. Slower states, such as California, join later.';
     var noteW = Math.min(G.w - tx - G.m, 420);
     var noteTxt = N(noteStr, tx, 0, noteW, { fs: G.fsA, fill: C.ink, halo: false });
     var extra = (noteTxt.box.h + 18) * mw;
