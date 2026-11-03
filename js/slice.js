@@ -97,8 +97,8 @@
   //   band bottom at 54 / 38
   function compactBar() {
     const s = window.BEAT_STATE;
-    if (!small || W >= 520 || H >= 280 || !s || !between(s.id, 'check-idea', 'power-rule-out')) return 0;
-    return s.id === 'check-idea' ? sm(0, 1, s.t || 0) : s.id === 'power-rule-out' ? 1 - sm(0, 1, s.t || 0) : 1;
+    if (!small || W >= 520 || H >= 280 || !s || !between(s.id, 'check-idea', 'power-benchmark')) return 0;   // the charts run of Part 5 (power-benchmark added 2026-11-02)
+    return s.id === 'check-idea' ? sm(0, 1, s.t || 0) : s.id === 'power-benchmark' ? 1 - sm(0, 1, s.t || 0) : 1;
   }
   function barGeo() {
     const c = compactBar(), bh = small ? lerp(BAR_P, 3, c) : BAR_D;
@@ -267,9 +267,9 @@
     if (ph && id === 'scope-outcomes' && state.next === 'scope-limits' && t > 0) svg += '<g opacity="' + f2(sm(0.5, 0.58, t)) + '">' + drawLimits(dY, dH, 0.26, 0, accent, rule, muted, ink) + '</g>';
     figSvg.innerHTML = svg;
     figSvg.setAttribute('aria-label', id === 'scope' ? 'An arrow runs from the part of the top bar that is left down to the letter b, the number I estimate, followed by a question mark.'
-      : id === 'scope-limits' ? 'Two bars on one scale. The rising cost everyone shared, about 88 dollars a month for a typical household, fills the width. The differences I compare, under about 3.40 dollars a month for half of all markets, make a sliver.'
+      : id === 'scope-limits' ? 'Two bars on one scale. The rising cost everyone shared, about 88 dollars a month for a typical household, fills the width. The differences I compare, under about 3.30 dollars a month for half of all markets, make a sliver.'
       : 'From b, the number I estimate, one arrow leads to close to zero, which would mean that local differences in fuel costs moved few votes, and one to a clear effect, which would show that voters punish local price rises, and how much.');
-    if (id === 'scope-limits') srcLine(['EIA; American Community Survey 2020–2024; project calculation on AAA prices, October 13–28; provisional.', 'EIA; ACS; project calculation; provisional.'], sm(0.04, 0.14, p) * (1 - ease(t)));
+    if (id === 'scope-limits') srcLine(['EIA; American Community Survey 2020–2024; project calculation on AAA prices, October 13–November 2.', 'EIA; ACS; project calculation.'], sm(0.04, 0.14, p) * (1 - ease(t)));
   }
 
   /* ================================================================
@@ -398,9 +398,9 @@
   }
 
   /* ---- scope-limits (2026-10-30): the differences I compare next to the rising cost everyone shared, on one scale ----
-     Monthly dollars for a typical household of 73 gallons: the $1.20 rise (EIA) and 4.6 cents, the unusual part of the rise for half of all markets.
+     Monthly dollars for a typical household of 73 gallons: the $1.20 rise (EIA) and 4.5 cents, the unusual part of the rise for half of all markets.
      Gray is what the comparison can't use and teal what it uses, as on the top bar. */
-  const SHARED_USD = 88, COMPARED_USD = 3.4;
+  const SHARED_USD = 88, COMPARED_USD = 3.3;
   function drawLimits(y0, h, p, t, accent, rule, muted, ink) {
     const fade = 1 - (small && W < 520 ? sm(0.25, 0.48, t) : ease(t)), tfs = window.THEME.figType.title[small ? 1 : 0], fsL = small ? 15 : 17, lh = Math.round(fsL * 1.3);
     const tiny = small && W < 520 && H < 230, tablet = small && W >= 520 && W < 640;
@@ -420,7 +420,6 @@
     let y = y0 + titleH + Math.max(lead, (h - titleH - blockH) * 0.42);
     let s = '';
     tl.forEach((ln, i) => { s += txt(ln, mx, y0 + (small ? 22 : 27) * (i + 1), tfs, ink, fa, 'start', 600, 'data-fig-title="1"'); });
-    if (!ph && !tablet) s += tag('Provisional', W - PAD, y0 + (small ? 22 : 27), muted, rule, fa);
     L1.forEach((ln, i) => { s += txt(ln, mx, y + fsL + i * lh, fsL, ink, la1, 'start', 500); });
     y += L1.length * lh + pd;
     s += '<rect x="' + f1(mx) + '" y="' + f1(y) + '" width="' + f1(mw * g1) + '" height="' + bh + '" rx="2" fill="' + rule + '" opacity="' + f2(fade) + '"/>';

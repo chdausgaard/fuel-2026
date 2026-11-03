@@ -1867,7 +1867,7 @@
     cmp2: { t: ['Vote shift and the unusual part of the extra fuel cost', 'Vote shift and the unusual part of extra fuel cost'], s: ['Simulated counties from many groups and races; shifts relative to the race average', 'Simulated counties, many groups and races'], tag: 'Illustrative' },
     as: { t: ['The assumption the comparison rests on', 'The assumption it rests on'], s: [ASSUMP7, ASSUMP7] },
     adjb: { t: ['Counties in the states I study', 'Counties in the states I study'] },
-    where: { t: ['How much each area counts in the estimate, compared with its votes', 'How much each area counts, compared with its votes'], tag: 'Provisional', s: ['Pale dots: states with no race in the analysis', 'Pale dots: states with no race in the analysis'] },
+    where: { t: ['How much each area counts in the estimate, compared with its votes', 'How much each area counts, compared with its votes'], s: ['Pale dots: states with no race in the analysis', 'Pale dots: states with no race in the analysis'] },
     oil: { t: ['Oil and gas jobs, by local market', 'Oil and gas jobs, by local market'] },
     prior: { t: ['Vote shift from 2020 to 2024, by county', 'Vote shift, 2020 to 2024'] },
     fan: { t: ['Each county, measured from its state’s average', 'Each county, from its state’s average'], s: ['Color: the market’s simulated price rise compared with its group', 'Color: simulated rise vs the market’s group'], tag: 'Illustrative' },
@@ -4017,7 +4017,7 @@
   SRC_OF['nearby-intro'] = ['Sources: Census Bureau statistical areas (2023 delineation); USDA commuting zones (2020).', 'Sources: Census Bureau statistical areas (2023); USDA commuting zones (2020).', 'Sources: Census Bureau; USDA.'];
   SRC_OF['nearby-groups'] = S_MKT; SRC_OF['assumption'] = S_MKT;
   SRC_OF['adj-oil'] = ['Source: Census Bureau, County Business Patterns 2023.', 'Source: Census Bureau, CBP 2023.'];
-  SRC_OF['scope-where'] = ['Project calculation on AAA prices, October 13–28, weighted as the regression is. Areas: fuel supply regions by kind of market; provisional.', 'Project calculation; provisional.'];
+  SRC_OF['scope-where'] = ['Project calculation on AAA prices, October 13–November 2, weighted as the regression is. Areas: fuel supply regions by kind of market.', 'Project calculation.'];
   SRC_OF['state-regions'] = SRC_OF['state-map'] = SRC_OF['adj-state'] = S_EIA;
   Object.assign(ARIA, {
     'price-local': 'The map of county dots, shaded by exposure. The dots outside Pennsylvania fade, and Pennsylvania’s 67 county dots expand into a map of the state. They are then colored by illustrative local price rises, darker where the rise is larger.',

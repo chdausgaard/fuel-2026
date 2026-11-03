@@ -1,5 +1,5 @@
 /* window.VIS.charts (v9): the chart beats of the explainer site.
-   v9 beats: check-idea, check-chart, fluke-intro, fluke-reshuffle, power-detect, power-rule-out;
+   v9 beats: check-idea, check-chart, fluke-intro, fluke-reshuffle, power-detect, power-rule-out, power-benchmark (2026-11-02: the detectable effect beside 15 per-dollar estimates from other studies, drawBenchmark, data/dollar.json);
    hol-prices, hol-gradient, hol-question, hol-limits; report-ladder, report-variants, prereg, when, results, about. Three runs in main.js OWNERS.
    v9.4: fluke-intro stands completely still (label above the cards, market and vote shift under each card, no subtitle); fluke-reshuffle runs five reshuffles over p 0.04-0.6 and fills the line over
    0.6-0.76 (beat of 260vh in css/site.css). report-variants:
@@ -26,9 +26,13 @@
 
   var MINE = ['simple-past', 'simple-past-2',
     'check-idea', 'check-chart', 'fluke-intro', 'fluke-reshuffle', 'fluke-estimate',
-    'power-detect', 'power-rule-out',
+    'power-detect', 'power-rule-out', 'power-benchmark',
     'hol-prices', 'hol-gradient', 'hol-question', 'hol-limits',
-    'report-ladder', 'report-variants', 'prereg', 'when', 'results', 'about'];
+    'report-ladder', 'report-variants', 'prereg', 'when', 'results', 'results-past', 'results-senate', 'about'];
+
+  /* The precision figures of the simulations, shared by power-detect, power-rule-out and power-benchmark (rebuilt on the final price window by hand):
+     detect: the effect the test finds four times in five; ruleOut: the half-width of the 90 percent interval when the true effect is zero; sd: the spread of one estimate (both distributions). Points per extra $10 a month. */
+  var PREC = { detect: 0.37, ruleOut: 0.21, sd: 0.12 };
 
   var KY = { band: [2, 3] };   // Kim & Yang (2021), converted to vote points per extra $10 a month: roughly 2 to 3
 
@@ -63,6 +67,102 @@
   ];
   var REP_DOM = [-1.3, 2.1];
 
+  /* ---------- results integration: when window.RESULTS is not null, use real data ---------- */
+  function hasResults() { return window.RESULTS != null; }
+  function isStandIn() { return hasResults() && window.RESULTS.stand_in; }
+  function resultsTag() {
+    if (!hasResults()) return 'Illustrative';
+    if (isStandIn()) return 'STAND-IN, NOT RESULTS';
+    var R = window.RESULTS;
+    if (R.stage === 'first') return 'First results';
+    if (R.stage === 'update') return 'Updated results';
+    if (R.final) return 'Final results';
+    return 'Results';
+  }
+  function resultsSource() {
+    if (!hasResults()) return 'Illustrative: made-up numbers until November 4.';
+    var R = window.RESULTS, s = '';
+    if (isStandIn()) s += 'STAND-IN, NOT RESULTS. ';
+    s += R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states';
+    if (R.states_out && R.states_out.length && R.states_out.length <= 8) s += ' (waiting: ' + R.states_out.join(', ') + ')';
+    s += '. As of ' + (R.as_of || '').replace('T', ' ').replace(/\.\d+Z?$/, ' UTC').replace(/Z$/, ' UTC') + '.';
+    s += ' Election results: civicAPI (civicapi.org).';   // attribution required by civicAPI's terms (2026-11-03)
+    return s;
+  }
+  function resultsSourceShort() {   // for a narrow panel: the state count and the time only
+    if (!hasResults()) return null;
+    var R = window.RESULTS;
+    return R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states. As of ' + (R.as_of || '').replace('T', ' ').replace(/:\d\d(\.\d+)?Z?$/, ' UTC').replace(/Z$/, ' UTC') + '. civicAPI.';
+  }
+  function standInMark() {   // a stand-in run: a large red watermark behind the figure, so no screenshot can pass for results
+    var fs = Math.max(18, Math.min(G.w / 11, 64));
+    return E('text', { x: G.w / 2, y: G.hh / 2, 'text-anchor': 'middle', 'font-family': FONT, 'font-size': fs, 'font-weight': 700, fill: C.rep, opacity: 0.28, transform: 'rotate(-14 ' + G.w / 2 + ' ' + G.hh / 2 + ')', 'pointer-events': 'none' }, 'STAND-IN, NOT RESULTS');
+  }
+  var rlCache = null, rvCache = null;   // built once per RESULTS object: the drawing code sets fields on the rows (txh, ...) and reads them in later calls, as it does on LADDER and VARIANTS
+  function realLadder() {
+    if (!hasResults()) return LADDER;
+    if (rlCache && rlCache.src === window.RESULTS) return rlCache.v;
+    rlCache = { src: window.RESULTS, v: buildLadder() };
+    return rlCache.v;
+  }
+  function buildLadder() {
+    return window.RESULTS.ladder.map(function (r, i) {
+      if (r.status !== 'run') return { lab: LADDER[i].lab, est: 0, lo: 0, hi: 0, main: r.main, status: r.status };
+      return { lab: LADDER[i].lab, est: r.beta_per_10_dollars, lo: r.ci95_lo_per_10_dollars, hi: r.ci95_hi_per_10_dollars, main: r.main, status: r.status };
+    });
+  }
+  function realVariants() {
+    if (!hasResults()) return VARIANTS;
+    if (rvCache && rvCache.src === window.RESULTS) return rvCache.v;
+    rvCache = { src: window.RESULTS, v: buildVariants() };
+    return rvCache.v;
+  }
+  function buildVariants() {
+    var out = [], R = window.RESULTS;
+    var specs = VARIANTS.slice();
+    specs.splice(specs.findIndex(function (v) { return v.tip === 'voteshare'; }) + 1, 0,
+      { lab: 'Vote share with the previous election', s: 'Levels: previous election', tip: 'levels_previous' });
+    if (!R.final) specs = specs.filter(function (v) { return v.tip !== 'turnout'; });
+    else specs.splice(specs.findIndex(function (v) { return v.tip === 'turnout'; }) + 1, 0,
+      { lab: 'Turnout interaction with 2024 Republican share', s: 'Turnout × 2024 Republican share', tip: 'turnout_interaction', turn: true,
+        unit: 'turnout points per $10/month × 2024 Republican share (state-clustered 95% interval)', unitS: 'Turnout points per $10 × 2024 GOP share' });
+    specs.push({ lab: 'Price only', tip: 'price_only', turn: true, unit: 'points per 10 cents', unitS: 'Points per 10 cents' },
+      { sep: 'Separate question: state prices' }, { lab: 'State-price analysis', s: 'State prices', tip: 'state_price' });
+    specs.forEach(function (v) {
+      if (v.sep) { out.push(Object.assign({}, v)); return; }
+      var tip = v.tip, found = null;
+      R.variants.forEach(function (rv) { if (rv.tip === tip) found = rv; });
+      if (!found || found.status !== 'run') {
+        var reason = found ? found.status : 'not available';
+        out.push(Object.assign({}, v, { est: null, lo: null, hi: null, status: reason }));
+        return;
+      }
+      var r = Object.assign({}, v);
+      if (found.band) {
+        r.band = true; r.lo = found.lo_per_10_dollars; r.hi = found.hi_per_10_dollars;
+        delete r.est;
+      } else {
+        var suffix = tip === 'price_only' ? '_per_10_cents' : '_per_10_dollars';
+        r.est = found['beta' + suffix]; r.lo = found['ci95_lo' + suffix]; r.hi = found['ci95_hi' + suffix];
+      }
+      r.status = 'run';
+      out.push(r);
+    });
+    return out;
+  }
+  function realDomain() {
+    if (!hasResults()) return REP_DOM;
+    var lo = REP_DOM[0], hi = REP_DOM[1];
+    var all = realLadder().concat(realVariants());
+    all.forEach(function (r) {
+      if (r.turn || r.sep) return;   // the two own-unit rows have their own axis
+      if (r.lo != null && isFinite(r.lo)) lo = Math.min(lo, r.lo - 0.15);
+      if (r.hi != null && isFinite(r.hi)) hi = Math.max(hi, r.hi + 0.15);
+      if (r.est != null && isFinite(r.est)) { lo = Math.min(lo, r.est - 0.15); hi = Math.max(hi, r.est + 0.15); }
+    });
+    return [lo, hi];
+  }
+
   var MAXW = 1100, MAXH = 1000, BAND = 22;   // widest and tallest chart box; the source line sits in a 22px band at the bottom
   var STAGE = { 'past-estimates': 0, 'past-estimates-2': 1, 'past-estimates-3': 2, 'past-estimates-4': 3 };   // the four beats of one figure: stages built so far (unrouted since v7)
   var PST = {};   // v9.3: the placebo figure is two beats (check-idea, check-chart) in one family (FAM); no beat holds another's labels any more
@@ -75,6 +175,7 @@
   var FONT = (window.THEME && window.THEME.fontLabelCharts) || '"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
   var MINUS = '−';
   var LABELS = {
+    'power-benchmark': 'Fifteen estimates from other studies of money and the vote, in two panels on one axis, in vote points per $10 a month, with a vertical line at the effect this test should reliably detect, ' + PREC.detect.toFixed(2) + (hasResults() ? ', and the 2026 main estimate on top' : ''),
     'simple-past': 'Twelve past elections with this year’s extra fuel cost against earlier vote shifts; gray dots for the simplest comparison across all counties',
     'simple-past-2': 'The same chart with within-race estimates added in dark; five of twelve lie outside the range expected when there is no effect',
     'check-idea': 'The twelve-row chart of past elections with labels but no estimates yet',
@@ -82,8 +183,8 @@
     'fluke-intro': 'Four illustrative markets with the unusual parts of their price rises on cards (minus 5, plus 10, minus 2 and minus 3 cents), the small scatter of vote shift against the unusual part of the rise, whose slope is the result, and the empty line the results will fall on',
     'fluke-estimate': 'The finished reshuffle picture holds, and a teal dot labelled my estimate appears on the line of reshuffled results, far out on the right, outside all of them.',
     'fluke-reshuffle': 'The unusual parts of four illustrative markets’ price rises reshuffled among the markets; each reshuffle changes the slope of the small scatter and drops a dot onto a line of results',
-    'power-detect': 'Two distributions on the same axis of results: the gray one of reshuffled results and a second at the detectable effect of 0.37',
-    'power-rule-out': 'The gray distribution with a bracket from minus 0.21 to plus 0.21 and shaded zones beyond it',
+    'power-detect': 'Two distributions on the same axis of results: the gray one of reshuffled results and a second at the detectable effect of ' + PREC.detect.toFixed(2),
+    'power-rule-out': 'The gray distribution with a bracket from minus ' + PREC.ruleOut.toFixed(2) + ' to plus ' + PREC.ruleOut.toFixed(2) + ' and shaded zones beyond it',
     'hol-prices': 'Ohio weekly gas price against the Midwest, with the tax suspension and a drop of about 27 cents',
     'hol-gradient': 'Ohio’s 88 counties by exposure and extra fuel cost of the price rise, with a scroll-linked drop for the tax-cut relief',
     'hol-question': 'Ohio’s exposure axis with two schematic lines for whether a cent of relief counts like a cent of price, a bracket for the relief’s own slope, and a second row for the shift against the governor’s party',
@@ -100,7 +201,9 @@
     'report-past': 'Forest plot of 2018–2024 estimates and an empty 2026 slot',
     prereg: 'Timeline of the plan and when the results appear',
     when: 'Timeline: plan and code fixed by November 2, Election Day on November 3, first results on November 4, one update about a week later and a final update at 100 percent (turnout added), then House races in December; the first results are highlighted',
-    results: 'Timeline with the first results highlighted',
+    results: hasResults() ? 'The 2026 main estimate shown above the twelve past elections on one axis' : 'Timeline with the first results highlighted',
+    'results-past': 'Exploratory estimates for the 2022 and 2024 elections with county prices, and the 2026 main estimate, on one axis',
+    'results-senate': 'Estimates for each of the nine competitive Senate races with 95% ranges, the estimate for all nine together, a band for the other Senate races, and the difference between the two',
     about: 'Timeline with the first results highlighted'
   };
 
@@ -302,6 +405,11 @@
      paler tint of the dot. It grows out of the estimate by e. o.main: the main estimate, a larger dot and a slightly heavier line; o.open: a hollow dot; o.op: the dot's opacity */
   function IV(xs, cy, r, e, o) {
     o = o || {};
+    if (r.status && r.status !== 'run') {
+      var why = String(r.status).replace(/^not_run: |^deferred: /, ''), wfs = G.compact ? 11 : 12, wx = xs(0) + 8;
+      if (wx + tw(why, wfs) > xs.range()[1]) wx = xs.range()[0] + 8;   // right of the zero line when it fits, so the line does not run through the words
+      return T(why, wx, cy + (G.compact ? 4 : 5), { fs: wfs, fill: C.muted, italic: true });
+    }   // results: a row that did not run shows why, never a mark
     var col = o.col || C.ink, rad = (G.compact ? 3.5 : 4.5) + (o.main ? 1.5 : 0), xe = xs(r.est), xl = xe + (xs(r.lo) - xe) * e, xh = xe + (xs(r.hi) - xe) * e;
     return LN(xl, cy, xh, cy, { stroke: mix(col, C.bg, 0.4), 'stroke-width': o.main ? 1.75 : 1.25 }) +
       E('circle', { cx: r2(xe), cy: r2(cy), r: rad, fill: o.open ? C.bg : col, stroke: o.open ? col : null, 'stroke-width': o.open ? 1.5 : null, opacity: o.op == null ? null : o.op });
@@ -603,7 +711,7 @@
   function drawPlaceboPhone(L) {
     var rr = plRows(); if (!rr) return msg('The placebo estimates are not loaded.');
     var idea = L.beat === 'check-idea', m = idea ? Math.max(ramp(L.p, 0.08, 0.20), L.to ? L.m : 0) : 1;
-    var tt = title('Twelve elections', 'Provisional'), out = tt.svg;
+    var tt = title('Twelve elections', ''), out = tt.svg;
     var short = G.h < 270, top = tt.bottom + (short ? 8 : 14), axY = G.h - (short ? 47 : 72), two = (axY - top) / 12 < 17;
     var groups = two ? [['midterm', 'Midterms'], ['presidential', 'Presidential']] : [[null, '']];
     var dm = Math.max(1, Math.ceil(d3.max(rr, function (r) { return Math.max(Math.abs(r.lo), Math.abs(r.hi)); }) * 2 + 0.1) / 2);
@@ -632,7 +740,7 @@
       }
     });
     out += T('Vote points per extra $10/month', G.w / 2, axY + (short ? 38 : 61), { fs: 13, fill: C.muted, anchor: 'middle' });
-    out += SRC(idea && m < 0.5 ? 'MIT Election Lab; Amlani and Algara.' : 'Provisional. MIT Election Lab; Amlani and Algara.');
+    out += SRC('MIT Election Lab; Amlani and Algara.');   // the price window closed on Nov 2: no Provisional status
     return out;
   }
 
@@ -644,7 +752,7 @@
        with no estimates (pe = 0); check-chart starts from that picture and brings the estimates in. */
     var idea = L.beat === 'check-idea', mm = idea ? (L.to ? L.m : 0) : 1;   // mm: 0 = the idea beat, 1 = the chart (the morph from the idea to the chart runs in t of check-idea)
     var cp = G.compact, pb = idea ? L.p : 1, pe = idea ? 0 : L.p, p = pb, o_ = 1 - (L.out || 0), out = '';
-    var tt = title(cp ? 'Twelve past elections' : 'Twelve past elections: this year’s extra fuel cost against earlier vote shifts', 'Provisional'); out += tt.svg;
+    var tt = title(cp ? 'Twelve past elections' : 'Twelve past elections: this year’s extra fuel cost against earlier vote shifts', ''); out += tt.svg;
     var axT = 'Points per extra $10 a month of fuel costs';   // on a phone it moves up into the subtitle, so that the twelve rows keep their height; the side labels carry the direction
     var dirT = 'Right = toward the Democrats, in every row.';   // v7.2 [5.1]: an Obama-era row pointing right is not "against Obama"
     var subC = N(cp ? axT + '.' : 'Dot: estimate. Line: the range of effects the data are consistent with (95%). ' + dirT, G.m, tt.bottom + 2, G.w - 2 * G.m, { fill: C.muted, fs: G.fsT + 0.5, halo: false });
@@ -652,9 +760,9 @@
     var sub = subC;   // the chart's subtitle sets the layout; the idea beat's text fades into it
     out += grp(mm, subC.svg) + (mm < 0.996 ? grp(1 - mm, subI.svg) : '');
     // the source line wraps on narrow panels; the space it needs is kept free
-    var srcT = ['Project estimates on AAA prices so far (October 13–28); provisional. Election results: MIT Election Data and Science Lab; Amlani and Algara (2002–2014).',
-      'Project estimates (provisional). Election results: MIT Election Data and Science Lab; Amlani and Algara (2002–2014).',
-      'Project estimates (provisional); MIT Election Lab; Amlani and Algara.', 'Project estimates; MIT Election Lab; Amlani and Algara.'];
+    var srcT = ['Project estimates on AAA prices, October 13–November 2. Election results: MIT Election Data and Science Lab; Amlani and Algara (2002–2014).',
+      'Project estimates. Election results: MIT Election Data and Science Lab; Amlani and Algara (2002–2014).',
+      'Project estimates; MIT Election Lab; Amlani and Algara.', 'Project estimates; MIT Election Lab; Amlani and Algara.'];
     srcT = cp ? (srcT.filter(function (t) { return tw(t, 12) <= G.w - 24; })[0] || srcT[1]) : srcT[0];   // the full line wraps on a desktop panel; a phone gets the longest one that fits on one line
     var srcX = SRCW(srcT);
     if (idea && mm < 0.996) srcT = cp ? 'MIT Election Lab; Amlani and Algara.' : 'Election results: MIT Election Data and Science Lab; Amlani and Algara (2002–2014).';   // no estimates yet; the space kept free is the chart's; once the morph completes, the chart's source is canonical
@@ -781,6 +889,10 @@
     senate: { h: 'Senate races only', t: 'Uses only the Senate races. Governor and Senate races differ in who is on the ballot, so this tests whether one kind of race drives the result.' },
     governor: { h: 'Governor races only', t: 'Uses only the governor races. Governor and Senate races differ in who is on the ballot, so this tests whether one kind of race drives the result.' },
     voteshare: { h: 'Vote share instead of vote shift', t: 'A different outcome. Instead of the vote shift, measured from the 2024 presidential vote, it uses the president’s party’s share of the vote itself, in two forms: allowing a separate slope for each race on the 2024 presidential share, and also on the previous midterm’s share.' },
+    levels_previous: { h: 'Vote share with the previous election', t: 'The second levels specification also adjusts for the previous election share, with a separate slope for each race.' },
+    price_only: { h: 'Price only', t: 'Uses the price rise alone, without weighting by income or gasoline use. Points per 10 cents, on its own axis.' },
+    state_price: { h: 'Separate question: state prices', t: 'Uses the unusual part of the state price rise instead of local market prices, with the main analysis controls and weights.' },
+    turnout_interaction: { h: 'Turnout interaction with the 2024 Republican share', t: 'How the turnout effect changes with the 2024 Republican share in points, centred at its weighted mean. The interval uses state-clustered CR1 inference; there is no reshuffling p-value for this interaction.' },
     sameoffice: { h: 'Measured from the previous race for the same office', t: 'A different outcome. The vote shift is measured from the previous race for the same office (the 2022 governor race, or the previous race for the Senate seat) instead of from the 2024 presidential vote.' },
     metro: { h: 'Metro-area prices', t: 'Uses price changes for metropolitan areas instead of county prices grouped into local markets, compared within groups of nearby metropolitan areas formed the same way. It tests whether the way local prices are measured drives the result.' },
     earlier: { h: 'Earlier rise also local', t: 'The main analysis adjusts for the unusual part of each state’s 2020–24 rise, measured at the state level because county prices begin in late 2022. This version also measures it locally, with metro-area prices.' },
@@ -1183,16 +1295,16 @@
   function drawPrecPhone(L) {
     var stage = L.beat === 'power-rule-out' ? 1 : 0;
     if (L.to === 'power-rule-out' && L.m > 0.5) stage = 1;
-    var tt = title('Simulated estimates', 'Provisional'), out = tt.svg;
+    var tt = title('Simulated estimates', ''), out = tt.svg;
     var x0 = G.m + 12, x1 = G.w - G.m - 12, xs = d3.scaleLinear().domain([-1, 1]).range([x0, x1]);
     var top = tt.bottom + (stage ? 18 : G.hh < 280 ? 28 : 34), ay = G.h - 44, peak = Math.max(12, (ay - top) * 0.90);
     function curve(mu, lo, hi, fill, stroke) {
       var d = 'M' + xs(lo) + ',' + ay;
-      for (var i = 0; i <= 80; i++) { var v = lerp(lo, hi, i / 80); d += ' L' + r2(xs(v)) + ',' + r2(ay - peak * Math.exp(-0.5 * Math.pow((v - mu) / 0.12, 2))); }
+      for (var i = 0; i <= 80; i++) { var v = lerp(lo, hi, i / 80); d += ' L' + r2(xs(v)) + ',' + r2(ay - peak * Math.exp(-0.5 * Math.pow((v - mu) / PREC.sd, 2))); }
       return E('path', { d: d + ' L' + xs(hi) + ',' + ay + 'Z', fill: fill, stroke: stroke, 'stroke-width': 1.5 });
     }
     if (stage) {
-      [[-1, -0.21], [0.21, 1]].forEach(function (z) {
+      [[-1, -PREC.ruleOut], [PREC.ruleOut, 1]].forEach(function (z) {
         out += E('rect', { x: xs(z[0]), y: top, width: xs(z[1]) - xs(z[0]), height: Math.max(1, ay - top), fill: 'url(#ch-rule-hatch)' });
         out += T('Ruled out ' + (z[0] === -1 ? '<' : '>') + sgnPlus(z[0] === -1 ? z[1] : z[0], 2), xs(z[0] === -1 ? z[1] : z[0]), top - 10, { fs: 11, wt: 600, anchor: z[0] === -1 ? 'end' : 'start' });
       });
@@ -1201,15 +1313,15 @@
     out += curve(0, -1, 1, C.rule, C.muted);
     if (!stage) {
       var a = ramp(L.p, 0.24, 0.30);
-      out += grp(a, curve(0.37, -1, 1, C.accentSoft, C.accent) + curve(0.37, 0.37 - 0.841621 * 0.12, 1, C.accent, null));
+      out += grp(a, curve(PREC.detect, -1, 1, C.accentSoft, C.accent) + curve(PREC.detect, PREC.detect - 0.841621 * PREC.sd, 1, C.accent, null));
       out += T('No effect', xs(-0.24), top - 20, { fs: 11, wt: 600, fill: C.muted, anchor: 'end' });
-      out += grp(a, T('Effect +0.37', xs(0.37), top - 20, { fs: 11, wt: 600, fill: C.accent, anchor: 'middle' }) +
-        T('4 in 5', xs(0.69), top - 3, { fs: 11, wt: 700, fill: C.accent, anchor: 'middle' }) +
-        LN(xs(0.69), top + 4, xs(0.49), ay - peak * 0.38, { stroke: C.accent }));
+      out += grp(a, T('Effect ' + sgnPlus(PREC.detect, 2), xs(PREC.detect), top - 20, { fs: 11, wt: 600, fill: C.accent, anchor: 'middle' }) +
+        T('4 in 5', xs(PREC.detect + 0.32), top - 3, { fs: 11, wt: 700, fill: C.accent, anchor: 'middle' }) +
+        LN(xs(PREC.detect + 0.32), top + 4, xs(PREC.detect + 0.12), ay - peak * 0.38, { stroke: C.accent }));
     }
     out += axisBottom(xs, ay, [-1, -0.5, 0, 0.5, 1], function (v) { return v ? sgnPlus(v, v % 1 ? 1 : 0) : '0'; });
     out += T('Points per extra $10 a month', (x0 + x1) / 2, ay + 33, { fs: 13, fill: C.muted, anchor: 'middle' });
-    out += SRC('Project simulations (AAA, October 13–28); provisional.');
+    out += SRC('Project simulations (AAA, October 13–November 2).');
     return out;
   }
   function drawPrec(L) {
@@ -1218,7 +1330,7 @@
     var pr = stage === 1 ? p : 1, held = stage >= 1;
     var morph = stage === 0 && L.to === 'power-rule-out' ? L.m : held ? 1 : 0;
     var tight = cp && G.h < 330;
-    var tt = title(tight ? 'Simulated estimates' : 'Simulated estimates per extra $10 a month', 'Provisional');
+    var tt = title(tight ? 'Simulated estimates' : 'Simulated estimates per extra $10 a month', '');
     out += tt.svg;
     var x0 = G.m + (cp ? 12 : 28), x1 = G.w - G.m - (cp ? 10 : 28);
     var xs = d3.scaleLinear().domain([-1, 1]).range([x0, x1]);
@@ -1226,7 +1338,7 @@
     var cloudTop = tt.bottom + (tight ? 34 : cp ? 54 : 80), axFull = cp ? cloudTop + (tight ? 40 : 52) : clamp(axY0, tt.bottom + 200, Math.max(tt.bottom + 200, G.h - 150));   // on a phone the figure is a low strip in all three beats (the panel is about 400px tall)
     var axY = axFull;
     var cloudH = Math.max(40, axY - cloudTop - 24);
-    var sd = 0.12, peak = cp ? Math.min(tight ? 34 : 40, Math.max(12, (axY - cloudTop - 4) * 0.83)) : Math.min(cloudH * 0.83, 230), crit = 0.37 - 0.841621 * sd;
+    var sd = PREC.sd, peak = cp ? Math.min(tight ? 34 : 40, Math.max(12, (axY - cloudTop - 4) * 0.83)) : Math.min(cloudH * 0.83, 230), crit = PREC.detect - 0.841621 * sd;
     function density(mu, lo, hi, fill, stroke) {
       var n = 80, pts = [], i, xx, yy, d = '';
       for (i = 0; i <= n; i++) {
@@ -1248,7 +1360,7 @@
     out += grp(held ? 1 : ramp(p, 0.03, 0.10), grid);
     if (held) {
       var ba = ramp(pr, 0.05, 0.25), zoneY = cloudTop - 4, zoneH = axY - zoneY;
-      var zones = [[x0, xs(-0.21)], [xs(0.21), x1]].map(function (z) {
+      var zones = [[x0, xs(-PREC.ruleOut)], [xs(PREC.ruleOut), x1]].map(function (z) {
         return E('rect', { x: r2(z[0]), y: r2(zoneY), width: r2(z[1] - z[0]), height: r2(zoneH), fill: C.rule, opacity: 0.2 }) +
           E('rect', { x: r2(z[0]), y: r2(zoneY), width: r2(z[1] - z[0]), height: r2(zoneH), fill: 'url(#ch-rule-hatch)' });
       }).join('');
@@ -1257,41 +1369,134 @@
     out += grp(held ? 1 : ramp(p, 0.05, 0.25), density(0, -1, 1, C.rule, C.muted));
     var accentA = (held ? 0 : ramp(p, 0.25, 0.45)) * (1 - morph);
     var slide = window.ENGINE && window.ENGINE.reducedMotion ? 0 : -18 * (1 - ramp(p, 0.25, 0.45));
-    out += grp(accentA, density(0.37, -1, 1, C.accentSoft, C.accent), { transform: 'translate(' + r2(slide) + ',0)' });
-    out += grp(accentA * 0.8, density(0.37, crit, 1, C.accent, null), { transform: 'translate(' + r2(slide) + ',0)' });
+    out += grp(accentA, density(PREC.detect, -1, 1, C.accentSoft, C.accent), { transform: 'translate(' + r2(slide) + ',0)' });
+    out += grp(accentA * 0.8, density(PREC.detect, crit, 1, C.accent, null), { transform: 'translate(' + r2(slide) + ',0)' });
     out += grp(accentA, LN(xs(crit), axY - peak - 8, xs(crit), axY, { stroke: C.accent, 'stroke-width': 1.4, 'stroke-dasharray': '3 3' }), { transform: 'translate(' + r2(slide) + ',0)' });
-    out += grp((held ? 0 : ann(L, 0.25, 0.36)) * (1 - morph), N('4 in 5', xs(0.37), axY - peak - 8 - Math.round(G.fsA * 1.33), 70, { anchor: 'middle', fs: G.fsA, wt: 700, fill: C.accent, halo: true }).svg);
+    out += grp((held ? 0 : ann(L, 0.25, 0.36)) * (1 - morph), N('4 in 5', xs(PREC.detect), axY - peak - 8 - Math.round(G.fsA * 1.33), 70, { anchor: 'middle', fs: G.fsA, wt: 700, fill: C.accent, halo: true }).svg);
     if (held) {
       // the bracket sits above the plot, over the zones, so that its label has room on a phone as well
       var yb = cloudTop - 14, lab = tight ? 'effects beyond this are ruled out' : 'if the estimate lands at zero, effects beyond this are ruled out', bw = Math.min(G.w - 2 * G.m - 20, cp ? 340 : 340);
       var ln_ = N(lab, 0, 0, bw, { fs: G.fsA, wt: 600, halo: false, noClamp: true }), zx_ = xs(0);
-      var brk = E('path', { d: 'M' + r2(xs(-0.21)) + ',' + r2(yb + 6) + ' V' + r2(yb) + ' H' + r2(xs(0.21)) + ' V' + r2(yb + 6), fill: 'none', stroke: C.ink, 'stroke-width': 1.4 });
+      var brk = E('path', { d: 'M' + r2(xs(-PREC.ruleOut)) + ',' + r2(yb + 6) + ' V' + r2(yb) + ' H' + r2(xs(PREC.ruleOut)) + ' V' + r2(yb + 6), fill: 'none', stroke: C.ink, 'stroke-width': 1.4 });
       brk += N(lab, zx_, yb - 4 - ln_.box.h, bw, { anchor: 'middle', fs: G.fsA, wt: 600, fill: C.ink, halo: true }).svg;
       out += grp(stage === 1 ? ann(L, 0.25, 0.38) : o_, brk);
     }
-    out += SRC('Project simulations on past elections (AAA prices, October 13–28); provisional.', null, true);
+    out += SRC('Project simulations on past elections (AAA prices, October 13–November 2).', null, true);
+    return out;
+  }
+
+  /* ================== power-benchmark: the detectable effect beside 15 per-dollar estimates from other studies ================== */
+  /* data/dollar.json (build_site_dollar.py): rows {label, country, what, panel, est, lo, hi} in vote points per $10 a month. One coefficient plot in two panels on one axis;
+     a vertical line at PREC.detect through both; with results, the "2026" row on top across a dashed divider (the same row and helpers as drawResultsPast).
+     Motion, one operation, placed against the text (TIMING in main.js: p 0.01-0.45 over the scroll while the text block's top travels from 0.95 to about 0.12 of the screen on a desktop,
+     from 1.14 to 0.44 on a phone): the rows come in from the start of the beat (upper panel p 0.02-0.18, lower 0.17-0.31) and the line is drawn after them (p 0.29-0.44), all while the top of the text is still on screen;
+     the furniture and the labels stand from p = 0. */
+  var BM_DOM = [-0.2, 3.5];
+  function drawBenchmark(L) {
+    var B = D.dollar;
+    if (!B || !B.rows || !B.rows.length) return msg('The data for the other studies is not loaded.');
+    var cp = G.compact, ph = G.phone, p = L.p, out = '', withR = hasResults(), R = window.RESULTS;
+    var tt = title(ph ? 'Other studies, per $10 a month' : 'Other studies of money and the vote', isStandIn() ? 'STAND-IN, NOT RESULTS' : '');
+    out += tt.svg;
+    var panels = [['recurring', 'Paid every month or year'], ['oneoff', 'Paid once, spread over 12 months']].map(function (q) {
+      return { head: q[1], rows: B.rows.filter(function (r) { return r.panel === q[0]; }).sort(function (a, b) { return b.est - a.est; }) };
+    });
+    var nS = panels[0].rows.length + panels[1].rows.length, nMax = Math.max(panels[0].rows.length, panels[1].rows.length);
+    // a phone held short (the panel under about 330px): the panel headings move into the plot (the empty lower right of each panel), the axis title is left to the figure title ("per $10 a month"),
+    // and the source is one short line, so that fifteen rows keep room. On the shortest panels even that does not leave room for fifteen rows: the two panels then take turns (paged)
+    var tight = ph && G.h < 330, paged = false, headH = tight ? 0 : ph ? 18 : cp ? 22 : 28, gapP = tight ? 6 : 0;
+    var srcTxt = tight ? 'Sources: 14 studies; rules filed at osf.io/k7txw.' : 'Sources: 14 published studies, put on one scale by rules filed with the pre-registration (osf.io/k7txw).';
+    var axTxt = 'Shift against the governing party (points per $10 a month)';
+    var axFs = ph ? 12 : G.fsT, axT = tight ? { box: { h: 0 } } : N(axTxt, G.w / 2, 0, G.w - 2 * G.m, { anchor: 'middle', fs: axFs, fill: C.muted, halo: false });
+    var bottom = 4 + G.fsT + 3 + (tight ? 4 : 8 + axT.box.h + 6) + (ph && !tight ? SRCW(srcTxt) : 0), unitMax = ph ? 22 : cp ? 30 : 40;
+    var subTxt = ph ? 'Dot: estimate. Line: 95% range.' : 'Dot: estimate. Line: the range of effects the data are consistent with (95%).', sub = null, labY, lineTop, y0, unit, k;
+    function fit(rowsN, heads) { return (G.h - bottom - 4 - y0 - heads * headH - (heads > 1 ? gapP : 0) - (withR ? 10 : 0)) / (rowsN + (withR ? 1 : 0)); }
+    for (k = 0; k < 2; k++) {   // a phone drops the subtitle if the rows would get too tight with it
+      sub = k === 0 && !tight ? N(subTxt, G.m, tt.bottom + 2, G.w - 2 * G.m - (ph ? 0 : 150), { fill: C.muted, fs: G.fsT + 0.5, halo: false }) : null;   // not a phone: room at the right for main.js's "Back to the overview" link, which sits under the tag
+      labY = (sub ? sub.box.y + sub.box.h : tt.bottom) + (tight ? 12 : ph ? 15 : cp ? 18 : 26); lineTop = labY + 5; y0 = lineTop + (ph ? 3 : 8);
+      unit = Math.min(unitMax, fit(nS, 2));
+      if (!ph || unit >= 15) break;
+    }
+    if (ph && unit < 11.5) { paged = true; headH = 18; gapP = 0; unit = Math.min(unitMax, fit(nMax, 1)); }
+    var inl = tight && !paged;   // the headings inside the plot
+    if (sub) out += sub.svg;
+    var fl = ph ? (unit >= 14 ? 12 : 11) : cp ? 12.5 : 14, fd = ph ? 11 : fl - 1.5, fh = ph ? Math.max(11, Math.min(12, fl)) : cp ? 13 : G.fsT;
+    var two = !ph && unit >= 27;   // author and, under it, country and what the money was; a short panel or a phone keeps the author alone
+    var rowsAll = panels[0].rows.concat(panels[1].rows), labMax = tw('2026', fl, 700);
+    rowsAll.forEach(function (r) { labMax = Math.max(labMax, tw(r.label, fl, 400), two ? tw(r.country + ', ' + r.what, fd, 400) : 0); });
+    var colL = Math.ceil(labMax) + (cp ? 12 : 22), x0 = G.m + colL, x1 = G.w - G.m - (ph ? 24 : cp ? 30 : 40);
+    var main = withR && R.ladder && R.ladder[3], dom0 = BM_DOM[0], step = ph ? 1 : 0.5;
+    if (main && okEst(main)) dom0 = Math.max(-1.5, Math.min(dom0, main.ci95_lo_per_10_dollars - 0.1, main.beta_per_10_dollars - 0.1));   // the 2026 estimate must stay on the axis, so the axis grows to the left for it
+    var xs = d3.scaleLinear().domain([dom0, BM_DOM[1]]).range([x0, x1]), ticks = d3.range(Math.ceil(dom0 / step - 1e-9) * step, (ph ? 3 : 3.5) + 1e-9, step);
+    var xl = x0 - (cp ? 8 : 12), cur = y0, grid = '', body = '', e;
+    // the 2026 row, with results, on top across a dashed divider
+    if (withR) {
+      var cy0 = cur + unit / 2, mr = okEst(main) ? Object.assign({ main: true }, toIV(main)) : { status: String((main && main.status) || 'not available').replace(/^not_run: |^deferred: /, '') };
+      body += T('2026', xl, cy0 + fl * 0.35, { anchor: 'end', fs: fl, wt: 700, fill: C.accent });
+      e = ease(ramp(p, 0.01, 0.09));
+      body += grp(ramp(e, 0, 0.3), mr.status && mr.status !== 'run' ? IV(xs, cy0, mr, e, {}) : IVc(xs, cy0, mr, e, { col: C.accent, main: true }));
+      cur += unit + 5;
+      body += LN(G.m, cur, G.w - G.m, cur, { stroke: C.rule, 'stroke-dasharray': '3 4' });
+      cur += 5;
+    }
+    var swap = ramp(p, 0.165, 0.185), endY = cur;   // paged: the first panel fades out as the second comes in
+    panels.forEach(function (pn, pi) {
+      var pb = '', pg = '', yy = cur;
+      if (!inl) { pb += T(pn.head, x1, yy + headH - 7, { anchor: 'end', fs: fh, wt: 600, fill: C.muted }); yy += headH; }   // right-aligned, clear of the two lines at the left
+      else if (pi) { pb += LN(G.m, yy + gapP / 2, G.w - G.m, yy + gapP / 2, { stroke: C.rule, 'stroke-dasharray': '3 4' }); yy += gapP; }
+      var segTop = yy;
+      pn.rows.forEach(function (r, i) {
+        var cy = yy + unit / 2, a0 = pi === 0 ? 0.02 + i * 0.016 : 0.17 + i * 0.0145;
+        if (two) pb += T(r.label, xl, cy - 1.5, { anchor: 'end', fs: fl, fill: C.ink }) + T(r.country + ', ' + r.what, xl, cy + fd + 0.5, { anchor: 'end', fs: fd, fill: C.muted });
+        else pb += T(r.label, xl, cy + fl * 0.35, { anchor: 'end', fs: fl, fill: C.ink });
+        var ee = ease(ramp(p, a0, a0 + 0.05));
+        pb += grp(ramp(ee, 0, 0.3), IVc(xs, cy, r, ee, { col: C.ink }));   // the row comes in: the dot fades in as its interval grows
+        if (r.hi > BM_DOM[1] && ee > 0.98) pb += T(r.hi.toFixed(1), xs(BM_DOM[1]) + 8, cy + fh * 0.35, { fs: ph ? fh : fh - 1, fill: C.muted });   // the interval runs past the axis: its end value beside the arrowhead
+        if (inl && i === pn.rows.length - 1) pb += T(pn.head, x1 + 8, cy + fh * 0.35, { anchor: 'end', fs: fh, wt: 600, fill: C.muted, halo: true });
+        yy += unit;
+      });
+      ticks.forEach(function (v) { if (v) pg += LN(xs(v), segTop - 2, xs(v), yy + 2, { stroke: C.rule }); });   // grid lines panel by panel, so that a heading sits on clear paper
+      if (paged) {
+        var al = pi ? swap : 1 - swap;
+        grid += grp(al, pg); body += grp(al, pb); endY = Math.max(endY, yy);
+      } else { grid += pg; body += pb; cur = yy; endY = yy; }
+    });
+    var axY = endY + 4;
+    var la = ease(ramp(p, 0.29, 0.44)), xd = xs(PREC.detect), yClip = lineTop + (axY - lineTop) * la, lab = 'Effect I should reliably detect: ' + PREC.detect.toFixed(2), lines = '', labs = '';
+    lines += LN(xs(0), lineTop, xs(0), axY, { stroke: C.muted, 'stroke-width': 1.2, 'stroke-dasharray': '4 3' });   // the zero line and the line at the detectable effect, under the rows
+    if (la > 0.004) lines += LN(xd, lineTop, xd, yClip, { stroke: C.accent, 'stroke-width': 1.8 });
+    labs += T('no effect', xs(0) - 5, labY, { anchor: 'end', fs: fh, fill: C.muted });
+    if (la > 0.004) {
+      var lx = xd + 6, anc = 'start';
+      if (lx + tw(lab, fh, 600) > G.w - G.m) { lab = ph ? 'Reliably detected: ' + PREC.detect.toFixed(2) : lab; if (lx + tw(lab, fh, 600) > G.w - G.m) { lx = G.w - G.m; anc = 'end'; } }
+      labs += grp(ramp(p, 0.29, 0.34), T(lab, lx, labY, { anchor: anc, fs: fh, wt: 600, fill: C.accent }));
+    }
+    out += grid + lines + body + labs;
+    out += axisBottom(xs, axY, ticks, function (v) { return v === 0 ? '0' : sgn(v, v % 1 ? 1 : 0); });
+    if (!tight) out += N(axTxt, G.w / 2, axY + 4 + G.fsT + 3 + 8, G.w - 2 * G.m, { anchor: 'middle', fs: axFs, fill: C.muted, halo: false }).svg;
+    out += SRC(srcTxt, null, ph && !tight);
     return out;
   }
 
   /* ================== report-ladder, report-variants: the estimates I promise to show ================== */
   function drawReportPhone(L) {
-    var ladder = L.beat === 'report-ladder', tt = title(ladder ? 'Simplest to main' : 'Main and variants', 'Illustrative'), out = tt.svg;
+    var ladder = L.beat === 'report-ladder', tt = title(ladder ? 'Simplest to main' : 'Main and variants', resultsTag()), out = tt.svg;
     var restore = G.phone && window.innerHeight > window.innerWidth, tiny = G.hh < 230, note = ladder && G.h - tt.bottom > 200;
     var top = tt.bottom + (tiny ? -4 : 14), ay = G.h - (restore && ladder ? note ? 104 : 66 : note ? 84 : tiny ? 44 : 49), rows, unit, group = '', own = false;
-    if (ladder) rows = LADDER.map(function (r, i) { return Object.assign({}, r, { tip: null, s: ['All counties', 'Within races', 'Unusual rise only', 'Final analysis'][i] }); });
+    if (ladder) rows = realLadder().map(function (r, i) { return Object.assign({}, r, { tip: null, s: ['All counties', 'Within races', 'Unusual rise only', 'Final analysis'][i] }); });
     else {
-      var n = Math.max(2, Math.floor((ay - top - 22) / 22) - 1), pages = [], main = Object.assign({}, LADDER[3], { s: 'Main analysis', tip: 'main' });
+      var n = Math.max(2, Math.floor((ay - top - 22) / 22) - 1), pages = [], main = Object.assign({}, realLadder()[3], { s: 'Main analysis', tip: 'main' });
       var pending = [], heading = 'Model variants';
       function flush() {
         for (var k = 0; k < pending.length; k += n) pages.push({ rows: [main].concat(pending.slice(k, k + n)), group: heading });
         pending = [];
       }
-      VARIANTS.forEach(function (v) {
+      realVariants().forEach(function (v) {
         if (v.sep) { flush(); heading = v.sep; }
         else if (v.turn) {
           flush();
           var prev = pages[pages.length - 1];
-          if (prev && prev.own) prev.rows.push(v);
+          if (prev && prev.own && (!hasResults() || prev.rows.length < 2)) prev.rows.push(v);
           else pages.push({ rows: [v], group: 'Alternative outcomes', own: true });
         }
         else pending.push(v);
@@ -1307,16 +1512,16 @@
         var y = top + i * bh, ayO = y + bh - 40, cy = (y + 36 + ayO - 8) / 2;
         var sx = d3.scaleLinear().domain([-1, 1]).range([G.m + 12, G.w - G.m - 12]);
         out += hitRect(r.tip, G.m, y, G.w - 2 * G.m, bh);
-        out += T(r.tip === 'govsen' ? 'Governor minus Senate' : 'Turnout', G.m, y + 20, { fs: 13, wt: 600 });
+        out += T(r.tip === 'govsen' ? 'Governor minus Senate' : (r.s || r.lab), G.m, y + 20, { fs: 13, wt: 600 });
         out += LN(sx(0), y + 30, sx(0), ayO, { stroke: C.ink, 'stroke-dasharray': '4 3' });
         out += IV(sx, cy, r, 1);
         out += axisBottom(sx, ayO, [-1, 0, 1], function (v) { return v ? sgn(v, 0) : '0'; });
-        out += T(r.tip === 'govsen' ? 'Points against governor’s party per $10/month' : 'Turnout points per extra $10/month', G.w / 2, ayO + 40, { fs: 13, anchor: 'middle', fill: C.muted });
+        out += T((hasResults() && r.unitS) || (r.tip === 'govsen' ? 'Points against governor’s party per $10/month' : 'Turnout points per extra $10/month'), G.w / 2, ayO + 40, { fs: 13, anchor: 'middle', fill: C.muted });
       });
-      return out + SRC('Illustrative: made-up numbers until November 4.');
+      return out + SRC(resultsSource());
     }
     var labelW = Math.min(142, (G.w - 2 * G.m) * 0.46), x0 = G.m + labelW, x1 = G.w - G.m - 10;
-    var xs = d3.scaleLinear().domain(REP_DOM).range([x0, x1]);
+    var xs = d3.scaleLinear().domain(realDomain()).range([x0, x1]);
     unit = (ay - top - (tiny ? 0 : 8)) / rows.length;
     if (!ladder) ay = top + unit * rows.length + (tiny ? 0 : 8);
     var plotBot = ay;
@@ -1333,19 +1538,19 @@
     out += T('Vote points per extra $10/month', G.w / 2, ay + 40, { fs: 13, anchor: 'middle', fill: C.muted });
     if (restore && ladder) out += T('Dot: estimate. Line: 95% range.', G.w / 2, ay + 58, { fs: 11, anchor: 'middle', fill: C.muted });
     if (note) out += N('Further down: less mixing with other differences; wider intervals.', G.m, ay + (restore ? 68 : 47), G.w - 2 * G.m, { fs: 11, halo: false }).svg;
-    out += SRC('Illustrative: made-up numbers until November 4.');
+    out += SRC(resultsSource());
     return out;
   }
   function drawReportTablet(L) {
     var a = smooth(0.04, 0.30, L.p), exit = 1 - smooth(0, 0.45, a), th0 = thumbSpecs ? thumbSpecs.length : 0;
     var out = grp(exit, drawReport({ beat: 'report-ladder', p: 1 }));
     if (thumbSpecs) thumbSpecs.slice(th0).forEach(function (ts) { ts.a *= exit; });
-    var tt = title('Main estimate and variants', 'Illustrative'), body = tt.svg;
+    var tt = title('Main estimate and variants', resultsTag()), body = tt.svg;
     body += N('Vote points per extra $10/month. Dot: estimate; line: 95% range.', G.m, tt.bottom, G.w - 2 * G.m, { fs: 14, fill: C.muted, halo: false }).svg;
     var top = tt.bottom + 32, bot = G.h - 48, cw = (G.w - 2 * G.m - 22) / 2;
-    var main = Object.assign({}, LADDER[3], { s: 'Main analysis', tip: 'main' });
-    var model = [main].concat(VARIANTS.filter(function (v) { return !v.sep; }).slice(0, 11));
-    function scale(x) { return d3.scaleLinear().domain(REP_DOM).range([x + 145, x + cw - 4]); }
+    var main = Object.assign({}, realLadder()[3], { s: 'Main analysis', tip: 'main' });
+    var model = [main].concat(realVariants().filter(function (v) { return !v.sep; }).slice(0, 11));
+    function scale(x) { return d3.scaleLinear().domain(realDomain()).range([x + 145, x + cw - 4]); }
     function row(r, x, y, xs, h) {
       var col = r.main ? C.accent : C.ink, lab = r.s || r.lab;
       var z = RL(lab, x + 137, y, 137, { fs: 13, wt: r.main ? 700 : 400, fill: col }).svg;
@@ -1360,11 +1565,11 @@
     x += cw + 22; xs = scale(x);
     var yy = top + 10, normal = (bot - top - 204) / 3;
     body += T('Alternative outcomes', x, yy, { fs: 13, fill: C.muted, wt: 600 }); yy += 14;
-    VARIANTS.filter(function (v) { return v.tip === 'voteshare' || v.tip === 'sameoffice'; }).forEach(function (r) {
+    realVariants().filter(function (v) { return v.tip === 'voteshare' || v.tip === 'sameoffice'; }).forEach(function (r) {
       body += row(r, x, yy + normal / 2, xs, normal); yy += normal;
     });
-    VARIANTS.filter(function (v) { return v.turn; }).forEach(function (r) {
-      body += T(r.tip === 'govsen' ? 'Governor minus Senate' : 'Turnout', x, yy + 14, { fs: 13, wt: 600 });
+    realVariants().filter(function (v) { return v.turn; }).forEach(function (r) {
+      body += T(r.tip === 'govsen' ? 'Governor minus Senate' : (r.s || r.lab), x, yy + 14, { fs: 13, wt: 600 });
       var tx = d3.scaleLinear().domain([-1, 1]).range([x + 18, x + cw - 18]), cy = yy + 32;
       body += LN(tx(0), yy + 23, tx(0), cy + 5, { stroke: C.ink, 'stroke-dasharray': '4 3' }) + IV(tx, cy, r, 1);
       body += axisBottom(tx, cy + 5, [-1, 0, 1], function (v) { return v ? sgnPlus(v, 0) : '0'; });
@@ -1372,21 +1577,21 @@
       yy += 80;
     });
     body += T('Alternative price measure', x, yy + 14, { fs: 13, fill: C.muted, wt: 600 }); yy += 24;
-    body += row(VARIANTS[VARIANTS.length - 1], x, yy + normal / 2, xs, normal);
+    body += row(realVariants()[realVariants().length - 1], x, yy + normal / 2, xs, normal);
     body += axisBottom(xs, bot + 4, [-1, 0, 1, 2], function (v) { return v ? sgn(v, 0) : '0'; });
     body += T('Vote points per extra $10/month', G.w / 2, bot + 40, { fs: 13, fill: C.muted, anchor: 'middle' });
-    SRC('Illustrative: made-up numbers until November 4.');
+    SRC(resultsSource());
     return out + grp(smooth(0.45, 1, a), body);
   }
   function drawReport(L) {
-    if (window.innerWidth < 900 && G.w >= 520 && G.w < 640 && L.beat === 'report-variants') return drawReportTablet(L);
+    if (window.innerWidth < 900 && G.w >= 520 && G.w < 640 && L.beat === 'report-variants') return hasResults() ? drawReportPhone(L) : drawReportTablet(L);
     if (G.phone) return drawReportPhone(L);
     var cur = L.beat, cp = G.w < 760 || G.compact, out = '', p = L.p;
     var g = cur === 'report-variants' ? smooth(0.04, 0.30, p) : 0;   // the ladder-to-variants morph lives in report-variants' build, not in the hand-over t
     var lad = cur === 'report-ladder', bV = cur === 'report-variants' ? p : 0;
     var short = cp && G.h < 340, fs = cp ? 13 : G.fsA, fsT = short ? 11 : cp ? 13 : G.fsT + 0.5;   // short: a phone held short (375x667), where nineteen rows have to share about 190px
-    var t1 = title(cp ? 'Estimates, simplest to main analysis' : 'The estimates I will report, from the simplest comparison to the main analysis', 'Illustrative');
-    var t2 = title(cp ? 'Main estimate and variants' : 'The main estimate under the variations I will show', 'Illustrative');
+    var t1 = title(cp ? 'Estimates, simplest to main analysis' : 'The estimates I will report, from the simplest comparison to the main analysis', resultsTag());
+    var t2 = title(cp ? 'Main estimate and variants' : 'The main estimate under the variations I will show', resultsTag());
     var gf = clamp(1 - g * 2.5, 0, 1), gv = ramp(g, 0.5, 1);   // the ladder fades out quickly while the main row glides up; the variants fade in at the end
     out += grp(gf, t1.svg) + grp(gv, t2.svg);
     var tb = cp ? lerp(t1.bottom, t2.bottom - (short ? 9 : 0), g) : Math.max(t1.bottom, t2.bottom), nar = G.w < 500, top = tb;
@@ -1398,24 +1603,24 @@
     else top = tb;
     // the variants' labels: the full ones where the chart keeps room enough, else the short ones; one line each, in a column as wide as the longest
     var fsV = short ? 9.5 : nar ? 11.5 : cp ? 13 : 15, mainW = tw('Main analysis', fsV + 0.5, 700), xrPad = cp ? 8 : 14, colRV = nar ? 14 : 24;
-    function labW(useS) { return Math.ceil(Math.max(mainW, d3.max(VARIANTS, function (v) { return v.sep ? 0 : tw(useS && v.s ? v.s : v.lab, fsV, 400); }))); }
+    function labW(useS) { return Math.ceil(Math.max(mainW, d3.max(realVariants(), function (v) { return v.sep ? 0 : tw(useS && v.s ? v.s : v.lab, fsV, 400); }))); }
     var useS = (G.w - 2 * G.m - colRV - (labW(false) + xrPad + 6)) < (cp ? 200 : 250), colLV = labW(useS) + xrPad + 6;
     var colL = cp ? 128 : clamp(G.w * 0.30, 180, 270), colR = cp ? 52 : clamp(G.w * 0.23, 130, 190);
     var colLe = lerp(colL, colLV, g), colRe = lerp(colR, colRV, g);   // the ladder keeps its own margins; the variants need a wide label column and no right margin
-    var x0 = G.m + colLe, x1 = G.w - G.m - colRe, xs = d3.scaleLinear().domain(REP_DOM).range([x0, x1]);
+    var x0 = G.m + colLe, x1 = G.w - G.m - colRe, xs = d3.scaleLinear().domain(realDomain()).range([x0, x1]);
     var oldAxY = G.h - (nar ? 6 : G.m) - (nar ? 4 + fsT + 3 + 12 + 13 : 4 + fsT + 3 + 22);
     var axY = nar ? lerp(oldAxY, G.h - 6 - (4 + fsT + 3 + 12), g) : oldAxY, rTop = top + (short ? lerp(3, 0, g) : cp ? 17 : 24), rBot = axY - 8;
     // variants geometry first (the turnout block, being a separate axis, breaks the grid)
-    var hdr = short ? 1.0 : nar ? 1.0 : cp ? 1.1 : 1.25, TXH = short ? 25 : nar ? 33 : 54, nTurn = VARIANTS.filter(function (v) { return v.turn; }).length, nUnits = 1 + hdr * VARIANTS.filter(function (v) { return v.sep; }).length + VARIANTS.filter(function (v) { return !v.sep && !v.turn; }).length + 0.5 * nTurn;
+    var hdr = short ? 1.0 : nar ? 1.0 : cp ? 1.1 : 1.25, TXH = short ? 25 : nar ? 33 : 54, nTurn = realVariants().filter(function (v) { return v.turn; }).length, nUnits = 1 + hdr * realVariants().filter(function (v) { return v.sep; }).length + realVariants().filter(function (v) { return !v.sep && !v.turn; }).length + 0.5 * nTurn;
     // the rows with their own unit (v.turn): the unit stands under the short axis, on one line where it fits and else on two (broken before the bracket)
     var fsU = nar ? fsT - 1 : fsT, lgU = short ? 1 : 2, unitMax = G.w - 2 * G.m - 4, tnbs = [], txhSum = 0, unitLines = {};
-    VARIANTS.forEach(function (v) {
+    realVariants().forEach(function (v) {
       if (!v.turn) return;
-      var u_ = nar ? (v.tip === 'govsen' ? 'Governor minus Senate: points against governor’s party per $10/month' : 'Turnout points per extra $10/month') : v.unit, ls = tw(u_, fsU) <= unitMax || u_.indexOf(' (') < 0 ? [u_] : [u_.slice(0, u_.indexOf(' (')), u_.slice(u_.indexOf(' (') + 1)];
+      var u_ = nar ? ((hasResults() && v.unitS) || (v.tip === 'govsen' ? 'Governor minus Senate: points against governor’s party per $10/month' : 'Turnout points per extra $10/month')) : v.unit, ls = tw(u_, fsU) <= unitMax || u_.indexOf(' (') < 0 ? [u_] : [u_.slice(0, u_.indexOf(' (')), u_.slice(u_.indexOf(' (') + 1)];
       unitLines[v.tip] = ls; v.txh = TXH + (ls.length - 1) * (fsU + lgU) + (cp ? 0 : 6); txhSum += v.txh;
     });
     var vu = Math.min((rBot - rTop - txhSum) / nUnits, cp ? 30 : 56), vrow = [], cc = rTop + vu;
-    VARIANTS.forEach(function (v) {
+    realVariants().forEach(function (v) {
       if (v.sep) { vrow.push({ v: v, y: cc + (nar ? 0.5 : 0.62) * hdr * vu }); cc += hdr * vu; }
       else if (v.turn) { var hT = 0.5 * vu + v.txh; vrow.push({ v: v, y: cc + 0.5 * vu }); tnbs.push({ top: cc, bot: cc + hT, y: cc + 0.5 * vu }); cc += hT; }
       else { vrow.push({ v: v, y: cc + 0.5 * vu }); cc += vu; }
@@ -1437,15 +1642,15 @@
     if (nar) out += grp(gf, T('Dot: estimate. Line: 95% range.', G.w / 2, axY + 4 + fsT + 3 + 12 + 13, { fs: fsT - 0.5, fill: C.muted, anchor: 'middle' })) + grp(gv, T('Vote points per extra $10/month; square: estimate; line: 95% range.', G.w / 2, axY + 4 + fsT + 3 + 12, { fs: fsT - 1, fill: C.muted, anchor: 'middle' }));
 
     // geometry of the ladder: heading rows are short, estimate rows are full height; one spare row under the ladder for the last note
-    var wts = LADDER.map(function (r) { return r.g ? 0.55 : 1; }), tw_ = d3.sum(wts) + (cp ? 1.4 : 0.5);   // a phone keeps room under the last row for the horizontal note (8.1)
+    var wts = realLadder().map(function (r) { return r.g ? 0.55 : 1; }), tw_ = d3.sum(wts) + (cp ? 1.4 : 0.5);   // a phone keeps room under the last row for the horizontal note (8.1)
     var u = Math.min((rBot - rTop) / tw_, cp ? 56 : 128), ly = [], yy = rTop;
-    LADDER.forEach(function (r, i) { ly.push(yy + wts[i] * u / 2); yy += wts[i] * u; });
-    var iMain = LADDER.length - 1, vy0 = rTop + 0.5 * vu;
+    realLadder().forEach(function (r, i) { ly.push(yy + wts[i] * u / 2); yy += wts[i] * u; });
+    var iMain = realLadder().length - 1, vy0 = rTop + 0.5 * vu;
     var yMain = lerp(ly[iMain], vy0, g), lw = colLe - (cp ? 8 : 14), stateCol = C.muted;
 
     // the ladder rows
     var bi = -1;
-    LADDER.forEach(function (r, i) {
+    realLadder().forEach(function (r, i) {
       if (!r.g) bi++;
       var main = !!r.main, a = lad ? ramp(p, 0.05 + 0.07 * i, 0.13 + 0.07 * i) : 1, fade = main ? 1 : gf;
       if (a <= 0.004 || fade <= 0.004) return;
@@ -1499,6 +1704,12 @@
         var txt = useS && v.s ? v.s : v.lab, s_ = '', e = ease(a);
         if (v.tip && a > 0.5) s_ += hitRect(v.tip, G.m - 4, cy - hitH / 2, xr - G.m + 8, hitH);   // a row label with a note: hover and keyboard focus
         s_ += T(txt, xr, cy + fsV * 0.35, { fs: fsV, fill: C.ink, anchor: 'end' }) + ul(txt, cy);
+        if (v.status && v.status !== 'run') {
+          // non-run row: show status reason instead of a mark
+          s_ += IV(xs, cy, v, e);   // IV writes the reason when the row did not run
+          out += grp(Math.min(1, a * 3), s_);
+          return;
+        }
         if (v.band) {
           var bx0 = xs(v.lo), bx1 = xs(v.hi), bh = Math.max(6, vu * 0.34), bn = 'range across the leave-outs';
           s_ += E('rect', { x: r2(lerp((bx0 + bx1) / 2, bx0, e)), y: r2(cy - bh / 2), width: r2((bx1 - bx0) * e), height: r2(bh), fill: C.faint, stroke: C.muted, 'stroke-width': 1 });
@@ -1521,7 +1732,69 @@
         out += grp(Math.min(1, a * 3), s_);
       });
     }
-    out += SRC('Illustrative: made-up numbers until November 4.');
+    out += SRC(resultsSource());
+    return out;
+  }
+
+  /* ================== results step: the 2026 estimate above the twelve past elections ================== */
+  function drawResults(L) {
+    if (!hasResults()) return drawTimeline(L);   // no results yet: show the timeline
+    var R = window.RESULTS, cp = G.compact, out = '';
+    var P = D.placebo;
+    if (!P || !P.rows || !P.rows.length) return msg('The placebo data is not loaded.');
+    var tag = isStandIn() ? 'STAND-IN, NOT RESULTS' : resultsTag();
+    var ttxt = cp ? '2026 and twelve past elections' : 'The 2026 main estimate alongside the twelve past elections';
+    var tt = title(ttxt, tag); out += tt.svg;
+    var sub = N('A positive estimate is a shift toward the Democrats, which in 2026 means against the president’s party.', G.m, tt.bottom + 2, G.w - 2 * G.m, { fill: C.muted, fs: G.fsT + 0.5, halo: false });
+    out += sub.svg;
+    // Collect rows: the twelve past elections, then the 2026 estimate
+    var rows = [];
+    P.rows.forEach(function (r) {
+      var lab = r.label.replace(/ (midterm|presidential)$/, '');
+      if (PL_PRES[r.id]) lab += ', ' + PL_PRES[r.id];
+      rows.push({ lab: lab, est: r.est, lo: r.lo, hi: r.hi, past: true, id: r.id });
+    });
+    var main = R.ladder[3];   // Final analysis
+    if (main && main.status === 'run') {
+      rows.push({ lab: '2026', est: main.beta_per_10_dollars, lo: main.ci95_lo_per_10_dollars, hi: main.ci95_hi_per_10_dollars, main: true });
+    } else {
+      rows.push({ lab: '2026', main: true, none: String((main && main.status) || 'not available').replace(/^not_run: |^deferred: /, '') });
+    }
+    // Domain: fit all rows
+    var dm = 0.5;
+    rows.forEach(function (r) {
+      if (r.none) return;
+      if (r.est != null) dm = Math.max(dm, Math.abs(r.est) + 0.15);
+      if (r.lo != null) dm = Math.max(dm, Math.abs(r.lo) + 0.15);
+      if (r.hi != null) dm = Math.max(dm, Math.abs(r.hi) + 0.15);
+    });
+    dm = Math.ceil(dm * 2) / 2;
+    var fl = cp ? 13 : G.fsA, top = sub.box.y + sub.box.h + (cp ? 10 : 18), axY = G.h - G.m - (4 + G.fsT + 3 + 22);
+    var labMax = d3.max(rows, function (r) { return tw(r.lab, fl, r.main ? 700 : 400); }) || 0;
+    var colL = Math.max(cp ? 54 : 78, Math.ceil(labMax) + (cp ? 12 : 22));
+    var x0 = G.m + colL, x1 = G.w - G.m - (cp ? 4 : 24);
+    var xs = d3.scaleLinear().domain([-dm, dm]).range([x0, x1]);
+    // A divider between past and 2026
+    var nPast = rows.filter(function (r) { return r.past; }).length;
+    var unit = (axY - top) / rows.length;
+    // Grid and axis
+    var ticks = xs.ticks(cp ? 4 : 8);
+    ticks.forEach(function (v) { if (v !== 0) out += LN(xs(v), top, xs(v), axY, { stroke: C.rule }); });
+    out += LN(xs(0), top, xs(0), axY, { stroke: C.ink, 'stroke-dasharray': '4 3', 'stroke-width': 1.2 });
+    out += axisBottom(xs, axY, ticks, function (v) { return v === 0 ? '0' : sgn(v, Math.abs(v - Math.round(v)) > 0.01 ? 1 : 0); });
+    out += T('Vote points per extra $10 a month', (x0 + x1) / 2, axY + 4 + G.fsT + 3 + 16, { fs: G.fsT, fill: C.muted, anchor: 'middle' });
+    // Rows
+    var a = ramp(L.p, 0, 0.45);
+    rows.forEach(function (r, i) {
+      var cy = top + (i + 0.5) * unit;
+      var col = r.main ? C.accent : C.ink, wt = r.main ? 700 : 400;
+      if (unit >= fl - 1 || r.main || i === 0) out += RL(r.lab, x0 - (cp ? 8 : 14), cy, colL - 8, { fs: fl, wt: wt, fill: col }).svg;   // a short panel names only the first past election and 2026
+      if (i === nPast && nPast > 0) out += LN(G.m, cy - unit / 2 + 2, G.w - G.m, cy - unit / 2 + 2, { stroke: C.rule, 'stroke-dasharray': '3 4' });
+      var e = r.main ? ease(ramp(a, 0.3, 0.9)) : ease(ramp(a, i * 0.02, 0.1 + i * 0.02));
+      if (r.none) out += T(r.none, x0 + 8, cy + fl * 0.35, { fs: fl - 1, fill: C.muted, italic: true });
+      else out += IV(xs, cy, r, e, { col: col, main: r.main });
+    });
+    out += SRC(resultsSource());
     return out;
   }
 
@@ -1534,6 +1807,120 @@
     { date: 'All states at 100%', what: 'Final update' },
     { date: 'December', what: 'House races' }
   ];
+  /* ================== results-senate and results-past: two figures that follow the main result ================== */
+  var SEN_NAMES = { IA: 'Iowa', KS: 'Kansas', ME: 'Maine', MI: 'Michigan', MN: 'Minnesota', NH: 'New Hampshire', OH: 'Ohio', SC: 'South Carolina', TX: 'Texas' };
+  function okEst(r) { return !!r && r.status === 'run' && r.beta_per_10_dollars != null && r.ci95_lo_per_10_dollars != null && r.ci95_hi_per_10_dollars != null; }
+  function toIV(r) { return { est: r.beta_per_10_dollars, lo: r.ci95_lo_per_10_dollars, hi: r.ci95_hi_per_10_dollars, status: 'run' }; }
+  function niceDomain(vals, floor, cap) {   // symmetric, in steps of 0.5; `cap` keeps one very wide interval from squeezing the rest
+    var m = floor || 0.5;
+    vals.forEach(function (v) { if (v != null && isFinite(v)) m = Math.max(m, Math.abs(v) + 0.15); });
+    m = Math.ceil(m * 2) / 2;
+    return cap ? Math.min(m, cap) : m;
+  }
+  /* the coefficient mark on a fixed axis: where the interval runs past the axis the line stops at the edge with a small chevron, and a dot outside the axis is not drawn */
+  function IVc(xs, cy, r, e, o) {
+    o = o || {};
+    if (r.status && r.status !== 'run') return IV(xs, cy, r, e, o);
+    var dm = xs.domain(), a = dm[0], b = dm[1], col = o.col || C.ink, pale = mix(col, C.bg, 0.4), rad = (G.compact ? 3.5 : 4.5) + (o.main ? 1.5 : 0);
+    var inside = r.est >= a && r.est <= b, xe = xs(clamp(r.est, a, b)), xl = xs(clamp(r.lo, a, b)), xh = xs(clamp(r.hi, a, b));
+    xl = xe + (xl - xe) * e; xh = xe + (xh - xe) * e;
+    var s = LN(xl, cy, xh, cy, { stroke: pale, 'stroke-width': o.main ? 1.75 : 1.25 }), k = 5;
+    if (r.lo < a && e > 0.98) s += E('path', { d: 'M' + r2(xl + k) + ',' + r2(cy - k) + ' L' + r2(xl) + ',' + r2(cy) + ' L' + r2(xl + k) + ',' + r2(cy + k), fill: 'none', stroke: pale, 'stroke-width': 1.25 });
+    if (r.hi > b && e > 0.98) s += E('path', { d: 'M' + r2(xh - k) + ',' + r2(cy - k) + ' L' + r2(xh) + ',' + r2(cy) + ' L' + r2(xh - k) + ',' + r2(cy + k), fill: 'none', stroke: pale, 'stroke-width': 1.25 });
+    if (inside) s += E('circle', { cx: r2(xe), cy: r2(cy), r: rad, fill: col });
+    return s;
+  }
+  function pmNum(v) { return Math.abs(v) < 0.005 ? '0.00' : sgnPlus(v, 2); }
+
+  function drawResultsSenate(L) {
+    if (!hasResults() || !window.RESULTS.senate) return drawTimeline(L);
+    var S = window.RESULTS.senate, cp = G.compact, out = '', tag = isStandIn() ? 'STAND-IN, NOT RESULTS' : resultsTag();
+    var tt = title('Competitive Senate races', tag); out += tt.svg;
+    var tight = G.phone && G.h < 320;   // the shortest phones: one subtitle line, so that ten rows keep room
+    var sub = N(tight ? 'Dot: estimate; line: 95% range.' : cp ? 'Against the president’s party. Dot: estimate; line: 95% range. One-race rows are exploratory.' : 'Vote points against the president’s party per extra $10 a month. Dot: estimate. Line: 95% range. Each race alone is exploratory.', G.m, tt.bottom + 2, G.w - 2 * G.m, { fill: C.muted, fs: G.fsT + 0.5, halo: false });
+    out += sub.svg;
+    var rows = (S.states || []).map(function (r) { return { lab: SEN_NAMES[r.state] || r.state, rec: r, est: r.beta_per_10_dollars, lo: r.ci95_lo_per_10_dollars, hi: r.ci95_hi_per_10_dollars, status: r.status === 'run' ? 'run' : r.status }; });
+    var nIn = rows.filter(function (r) { return r.status === 'run'; }).length;
+    var comp = S.competitive, oth = S.other, diff = S.difference, hasC = okEst(comp), hasO = okEst(oth);
+    var pooled = { lab: hasC ? 'All together (' + comp.n_states + ' states)' : 'All together', main: true };
+    if (hasC) Object.assign(pooled, toIV(comp)); else pooled.status = String((comp && comp.status) || 'not available').replace(/^not_run: /, '');
+    // the caption under the axis: the registered difference, then what the numbers can't show
+    var c1 = okEst(diff)
+      ? (tight ? 'Competitive minus other: ' : 'Competitive minus other Senate races: ') + pmNum(diff.beta_per_10_dollars) + ' points (95% interval ' + pmNum(diff.ci95_lo_per_10_dollars) + ' to ' + pmNum(diff.ci95_hi_per_10_dollars) + ').'
+      : 'Competitive minus other Senate races: not available' + (diff && diff.status ? ' (' + String(diff.status).replace(/^not_run: /, '') + ')' : '') + '.';
+    var c2 = tight ? 'Little power; one-race rows are noisy.' : G.phone ? 'Little power; one race alone is exploratory and noisy.' : 'This comparison has little power, and the estimate for any one race alone is noisy.';
+    var capFs = cp ? 12 : G.fsT, capW = G.w - 2 * G.m, capN = N(c1 + ' ' + c2, G.m, 0, capW, { fs: capFs, halo: false, fill: C.ink });
+    var capH = capN.box.h + 6, axSp = 4 + G.fsT + 3 + 30;
+    var fl = tight ? 11 : cp ? 12 : G.fsA, bandLab = cp ? 15 : 20;
+    var top = sub.box.y + sub.box.h + (G.phone ? 6 : cp ? 32 : 40) + bandLab, axY = G.h - capH - axSp - 4;   // the strip under the subtitle is for main.js's "Back to the overview" button
+    var all = rows.concat([pooled]), unit = Math.min((axY - top) / (all.length + 0.5), cp ? 34 : 46), sepGap = unit * 0.5;
+    axY = Math.min(axY, top + unit * all.length + sepGap + 6);
+    var vals = [];
+    all.forEach(function (r) { if (r.status === 'run') vals.push(r.lo, r.hi, r.est); });
+    var pv = []; [comp, oth].forEach(function (r) { if (okEst(r)) pv.push(r.ci95_lo_per_10_dollars, r.ci95_hi_per_10_dollars, r.beta_per_10_dollars); });
+    var dmPool = niceDomain(pv, 0.5), dm = niceDomain(vals.concat(pv), 0.5, Math.max(2, dmPool * 2.5));
+    var labMax = d3.max(all, function (r) { return tw(r.lab, fl, r.main ? 700 : 400); }) || 0, colL = Math.ceil(labMax) + (cp ? 14 : 24);
+    var x0 = G.m + colL, x1 = G.w - G.m - (cp ? 6 : 24), xs = d3.scaleLinear().domain([-dm, dm]).range([x0, x1]);
+    var ticks = xs.ticks(cp ? 4 : 8);
+    var a = ramp(L.p, 0, 0.45);
+    // the reference band: the pooled estimate for the other Senate races
+    if (hasO) {
+      var bl = xs(clamp(oth.ci95_lo_per_10_dollars, -dm, dm)), bh = xs(clamp(oth.ci95_hi_per_10_dollars, -dm, dm)), bg = ease(ramp(a, 0, 0.5));
+      out += grp(bg, E('rect', { x: r2(bl), y: r2(top - 4), width: r2(Math.max(2, bh - bl)), height: r2(axY - top + 4), fill: C.accentSoft, opacity: 0.75 }) +
+        LN(xs(clamp(oth.beta_per_10_dollars, -dm, dm)), top - 4, xs(clamp(oth.beta_per_10_dollars, -dm, dm)), axY, { stroke: C.accent, 'stroke-width': 1.25, 'stroke-dasharray': '5 3' }) +
+        T(cp ? 'Other Senate races' : 'Other Senate races: estimate and 95% range', clamp((bl + bh) / 2, x0 + (cp ? 48 : 120), x1 - (cp ? 48 : 120)), top - 10, { fs: cp ? 12 : G.fsT, fill: C.accent, anchor: 'middle', wt: 600 }));
+    }
+    ticks.forEach(function (v) { if (Math.abs(v) > 1e-9) out += LN(xs(v), top - 4, xs(v), axY, { stroke: C.rule }); });
+    out += LN(xs(0), top - 4, xs(0), axY, { stroke: C.ink, 'stroke-dasharray': '4 3', 'stroke-width': 1.2 });
+    out += axisBottom(xs, axY, ticks, function (v) { return v === 0 ? '0' : sgn(v, Math.abs(v - Math.round(v)) > 0.01 ? 1 : 0); });
+    out += T(tight ? 'Points against the president’s party per $10 a month' : cp ? 'Vote points per extra $10 a month' : 'Vote points against the president’s party per extra $10 a month', tight ? G.w / 2 : (x0 + x1) / 2, axY + 4 + G.fsT + 3 + 16, { fs: tight ? G.fsT - 1 : G.fsT, fill: C.muted, anchor: 'middle' });
+    all.forEach(function (r, i) {
+      var cy = top + (i + 0.5) * unit + (r.main ? sepGap : 0), col = r.main ? C.accent : C.ink;
+      out += RL(r.lab, x0 - (cp ? 8 : 14), cy, colL - 8, { fs: fl, wt: r.main ? 700 : 400, fill: col }).svg;
+      if (r.main) out += LN(G.m, cy - unit / 2 - sepGap / 2 + 2, G.w - G.m, cy - unit / 2 - sepGap / 2 + 2, { stroke: C.rule, 'stroke-dasharray': '3 4' });
+      var e = ease(ramp(a, 0.2 + i * 0.02, 0.5 + i * 0.02));
+      out += r.status === 'run' ? IVc(xs, cy, r, e, { col: col, main: r.main }) : IV(xs, cy, { status: r.status }, e, {});
+    });
+    out += N(c1 + ' ' + c2, G.m, axY + axSp, capW, { fs: capFs, halo: false, fill: C.ink }).svg;
+    out += SRC(resultsSource(), resultsSourceShort());
+    return out;
+  }
+
+  function drawResultsPast(L) {
+    if (!hasResults()) return drawTimeline(L);
+    var P = D.past_county;
+    if (!P || !P.rows) return msg('The data for 2022 and 2024 is not loaded.');
+    var R = window.RESULTS, cp = G.compact, out = '', tag = isStandIn() ? 'STAND-IN, NOT RESULTS' : 'Exploratory';
+    var tt = title(cp ? 'The same design in 2022, 2024 and 2026' : 'The same design in 2022, 2024 and 2026', tag); out += tt.svg;
+    var sub = N(cp ? 'Against the president’s party. Dot: estimate; line: 95% range.' : 'Vote points against the president’s party per extra $10 a month. Dot: estimate. Line: 95% range.', G.m, tt.bottom + 2, G.w - 2 * G.m, { fill: C.muted, fs: G.fsT + 0.5, halo: false });
+    out += sub.svg;
+    var rows = P.rows.map(function (r) { return { lab: r.label, est: r.beta_per_10_dollars, lo: r.ci95_lo_per_10_dollars, hi: r.ci95_hi_per_10_dollars, status: r.status === 'run' ? 'run' : r.status, past: true }; });
+    var main = R.ladder && R.ladder[3];
+    if (okEst(main)) rows.push(Object.assign({ lab: '2026', main: true }, toIV(main)));
+    else rows.push({ lab: '2026', main: true, status: String((main && main.status) || 'not available').replace(/^not_run: |^deferred: /, '') });
+    var cap = '2022 and 2024: exploratory, run before I registered the plan. Price change measured from a single archived day in 2020. In 2022 and 2024 the president was a Democrat, so a positive value there is a shift toward the Republicans.';
+    var capFs = cp ? 12 : G.fsT, capN = N(cap, G.m, 0, G.w - 2 * G.m, { fs: capFs, halo: false, fill: C.ink }), axSp = 4 + G.fsT + 3 + 30;
+    var fl = cp ? 13 : G.fsA, top = sub.box.y + sub.box.h + (G.phone ? 10 : cp ? 32 : 40), unit = Math.min((G.h - capN.box.h - axSp - 14 - top) / rows.length, cp ? 44 : 60), axY = top + unit * rows.length + 4;
+    var vals = []; rows.forEach(function (r) { if (r.status === 'run') vals.push(r.lo, r.hi, r.est); });
+    var dm = niceDomain(vals, 0.5), labMax = d3.max(rows, function (r) { return tw(r.lab, fl, r.main ? 700 : 400); }) || 0, colL = Math.ceil(labMax) + (cp ? 14 : 24);
+    var x0 = G.m + colL, x1 = G.w - G.m - (cp ? 6 : 24), xs = d3.scaleLinear().domain([-dm, dm]).range([x0, x1]), ticks = xs.ticks(cp ? 4 : 8);
+    ticks.forEach(function (v) { if (Math.abs(v) > 1e-9) out += LN(xs(v), top, xs(v), axY, { stroke: C.rule }); });
+    out += LN(xs(0), top, xs(0), axY, { stroke: C.ink, 'stroke-dasharray': '4 3', 'stroke-width': 1.2 });
+    out += axisBottom(xs, axY, ticks, function (v) { return v === 0 ? '0' : sgn(v, Math.abs(v - Math.round(v)) > 0.01 ? 1 : 0); });
+    out += T(cp ? 'Vote points per extra $10 a month' : 'Vote points against the president’s party per extra $10 a month', (x0 + x1) / 2, axY + 4 + G.fsT + 3 + 16, { fs: G.fsT, fill: C.muted, anchor: 'middle' });
+    var a = ramp(L.p, 0, 0.45);
+    rows.forEach(function (r, i) {
+      var cy = top + (i + 0.5) * unit, col = r.main ? C.accent : C.ink;
+      out += RL(r.lab, x0 - (cp ? 8 : 14), cy, colL - 8, { fs: fl, wt: r.main ? 700 : 400, fill: col }).svg;
+      if (r.main) out += LN(G.m, cy - unit / 2, G.w - G.m, cy - unit / 2, { stroke: C.rule, 'stroke-dasharray': '3 4' });
+      var e = r.main ? ease(ramp(a, 0.3, 0.9)) : ease(ramp(a, i * 0.05, 0.3 + i * 0.05));
+      out += r.status === 'run' ? IVc(xs, cy, r, e, { col: col, main: r.main }) : IV(xs, cy, { status: r.status }, e, {});
+    });
+    out += N(cap, G.m, axY + axSp, G.w - 2 * G.m, { fs: capFs, halo: false, fill: C.ink }).svg;
+    out += SRC(resultsSource(), resultsSourceShort());
+    return out;
+  }
+
   function drawTimelinePhone(L) {
     var when = L.beat === 'when', mw = when ? 1 : L.to === 'when' ? L.m : 0;
     var tt = title('Plan and results'), out = tt.svg, rx = G.m + 10, tx = rx + 22;
@@ -1915,9 +2302,9 @@
     'simple-past': drawCrude, 'simple-past-2': drawCrude,
     'check-idea': drawPlacebo, 'check-chart': drawPlacebo,
     'fluke-intro': drawTest, 'fluke-reshuffle': drawTest, 'fluke-estimate': drawTest,
-    'power-detect': drawPrec, 'power-rule-out': drawPrec,
+    'power-detect': drawPrec, 'power-rule-out': drawPrec, 'power-benchmark': drawBenchmark,
     'hol-prices': drawHolPrices, 'hol-gradient': drawHolGradient, 'hol-question': drawHolQuestion, 'hol-limits': drawHolQuestion,
-    'report-ladder': drawReport, 'report-variants': drawReport, prereg: drawTimeline, when: drawTimeline,
+    'report-ladder': drawReport, 'report-variants': drawReport, prereg: drawTimeline, when: drawTimeline, results: drawResults, 'results-past': drawResultsPast, 'results-senate': drawResultsSenate,
     // unrouted (kept for re-insertion)
     'placebo-idea': drawPlaceboIdea, 'holiday-measure': drawHolMeasure, 'holiday-split': drawHolSplit,
     'holiday-compare': drawHolCompare, 'holiday-limits': drawHolCompare,
@@ -1928,7 +2315,7 @@
 
   /* ================== engine ================== */
   function isMine(id) { return !!id && MINE.indexOf(id) >= 0; }
-  function alias(id) { return id === 'results' || id === 'about' ? 'when' : id; }   // results and about hold the timeline of `when`
+  function alias(id) { if ((id === 'results' || id === 'results-past' || id === 'results-senate') && hasResults()) return id; return id === 'results' || id === 'about' ? 'when' : id; }   // results has its own figure when RESULTS is loaded; otherwise it and about hold the timeline of `when`
   /* the layers to draw for a scroll state: the current beat; related beats (FAM) share one layer that morphs by m,
      other neighbours cross-fade. p is quantised and held, so the same picture is not drawn twice. */
   function plan(s) {
@@ -1968,6 +2355,7 @@
       if (L.a <= 0.004 || !DRAW[L.beat]) return;
       var inner = ''; srcNow = null;
       try { inner = DRAW[L.beat](L); } catch (e) { if (window.console) console.error('charts', L.beat, e); }
+      if (isStandIn() && inner && (L.beat === 'report-ladder' || L.beat === 'report-variants' || L.beat === 'results' || L.beat === 'results-past' || L.beat === 'results-senate' || L.beat === 'power-benchmark')) inner = standInMark() + inner;
       out += grp(L.a, inner);
       if (srcNow) srcs.push({ c: srcNow, a: L.a });   // v7.2 [S12]: each figure's source line fades with its figure
     });

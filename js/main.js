@@ -164,6 +164,7 @@
     'check-chart': { a: 0.063, b: 0.234, span: [0.57, 0.40] },
     'fluke-reshuffle': { linear: true },
     'power-detect': { a: 0.034, b: 0.452, span: [0.71, 0.45] },
+    'power-benchmark': { a: 0.010, b: 0.450, span: [0.83, 0.70] },   // by hand (the frame change is under gen_timing's floor): over from the block's top at 0.95 to 0.12 (PI: done while the top of the text is on screen)
     'scope': { a: 0.062, b: 0.358, span: [0.57, 0.41] },
     'scope-outcomes': { a: 0.088, b: 0.469, span: [0.57, 0.42] },
     'scope-limits': { a: 0.05, b: 0.46, span: [0.60, 0.42] },
@@ -262,14 +263,14 @@
     ['scene', 'price-start', 'turn'],
     ['dots', 'exposure', 'adj-lag'],
     ['dots', 'eq-1', 'stock-take'],
-    ['charts', 'check-idea', 'power-rule-out'],
+    ['charts', 'check-idea', 'power-benchmark'],
     ['slice', 'scope', 'scope-limits'],
     ['dots', 'state-question', 'scope-where'],
     ['charts', 'report-ladder', 'about']
   ];
   const MODS_SET = new Set(OWNERS.map(o => o[0]));
   const MODS = [...MODS_SET];   // unique modules in appearance order: scene, dots, charts, slice
-  const DATA_FILES = ['counties', 'eia', 'holidays', 'sim', 'hist', 'shares', 'holiday_example', 'markets', 'placebo', 'stages', 'where'];
+  const DATA_FILES = ['counties', 'eia', 'holidays', 'sim', 'hist', 'shares', 'holiday_example', 'markets', 'placebo', 'stages', 'where', 'past_county', 'dollar'];
   const REQUIRED = ['counties', 'eia'];
 
   let BEATS = [], IDS = [], N = 0, OWNER_AT = [];
@@ -965,6 +966,17 @@
   function start() {
     if (!window.BEATS && scriptsPending) { startWaiting = true; return; }   // steps.js is being requested again
     BEATS = window.BEATS || [];
+    // The two figures that follow the main result need results to show: without RESULTS they are not part of the page, and the Senate one also needs the Senate block.
+    const withheld = ['results-past', 'results-senate'].filter(id => !(window.RESULTS != null && (id === 'results-past' || window.RESULTS.senate)));
+    if (BEATS.some(b => withheld.includes(b.id))) BEATS = BEATS.filter(b => !withheld.includes(b.id));
+    if (window.RESULTS != null) {
+      const R = window.RESULTS;
+      const escapeText = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const states = R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states in the fitted main estimate.';
+      BEATS = BEATS.map(b => b.id === 'results' ? { ...b, html:
+        '<p>' + escapeText(R.statement) + '</p><p>' + escapeText(states) + '</p>' +
+        '<p>These are first results; they update as slower states pass 90 percent of the expected vote.</p>' } : b);
+    }
     if (/[?&]open=all\b/.test(location.search)) Object.keys(RUNS).forEach(k => { runOpen[k] = true; });
     setRuns();
     document.querySelectorAll('a.ph').forEach(a => a.addEventListener('click', e => e.preventDefault()));

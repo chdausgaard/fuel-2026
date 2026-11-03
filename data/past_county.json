@@ -1,0 +1,30 @@
+{
+ "exploratory": true,
+ "baseline_note": "The price change is measured from a single archived day in 2020 (October 2).",
+ "unit": "vote points against the president's party per extra $10 a month",
+ "source": "past_county.csv, primary rows (2026-11-02)",
+ "rows": [
+  {
+   "cycle": 2022,
+   "label": "2022 midterm",
+   "status": "run",
+   "beta_per_10_dollars": 0.0378,
+   "ci95_lo_per_10_dollars": -0.2123,
+   "ci95_hi_per_10_dollars": 0.2684,
+   "p_ri": 0.7456,
+   "n_states": 41,
+   "n_counties": 2667
+  },
+  {
+   "cycle": 2024,
+   "label": "2024 election",
+   "status": "run",
+   "beta_per_10_dollars": -0.0639,
+   "ci95_lo_per_10_dollars": -0.2917,
+   "ci95_hi_per_10_dollars": 0.162,
+   "p_ri": 0.5662,
+   "n_states": 50,
+   "n_counties": 3111
+  }
+ ]
+}

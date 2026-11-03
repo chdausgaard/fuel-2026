@@ -1,0 +1,164 @@
+{
+ "unit": "vote points against the governing party per $10 a month, at the U.S. median household income",
+ "source": "prereg/lit/dollar_effects/converted.csv, rows counted",
+ "summary": {
+  "n": 15,
+  "median": 0.231,
+  "iqr": [
+   0.058,
+   1.253
+  ]
+ },
+ "rows": [
+  {
+   "id": "Sances2017Attribution",
+   "label": "Sances 2017",
+   "country": "U.S.",
+   "what": "property-tax rise",
+   "panel": "recurring",
+   "est": 1.85,
+   "lo": 1.26,
+   "hi": 2.44
+  },
+  {
+   "id": "Gonzlez2025Government",
+   "label": "González 2025",
+   "country": "Chile",
+   "what": "free milk",
+   "panel": "recurring",
+   "est": 1.25,
+   "lo": 0.01,
+   "hi": 2.49
+  },
+  {
+   "id": "Levitt1997Impact",
+   "label": "Levitt 1997",
+   "country": "U.S.",
+   "what": "federal spending",
+   "panel": "recurring",
+   "est": 0.48,
+   "lo": 0.07,
+   "hi": 0.89
+  },
+  {
+   "id": "Labonne2013Local",
+   "label": "Labonne 2013",
+   "country": "Philippines",
+   "what": "cash transfers",
+   "panel": "recurring",
+   "est": 0.16,
+   "lo": 0.02,
+   "hi": 0.31
+  },
+  {
+   "id": "Gromadzki2023Populists",
+   "label": "Gromadzki 2024",
+   "country": "Poland",
+   "what": "child benefit",
+   "panel": "recurring",
+   "est": 0.12,
+   "lo": 0.07,
+   "hi": 0.17
+  },
+  {
+   "id": "Conover2020Cash",
+   "label": "Conover 2020",
+   "country": "Colombia",
+   "what": "cash transfers",
+   "panel": "recurring",
+   "est": 0.09,
+   "lo": 0.08,
+   "hi": 0.11
+  },
+  {
+   "id": "Imai2020Nonpartisan_progresa",
+   "label": "Imai 2020",
+   "country": "Mexico",
+   "what": "cash transfers",
+   "panel": "recurring",
+   "est": 0.01,
+   "lo": -0.01,
+   "hi": 0.02
+  },
+  {
+   "id": "Filipovich2018Campaign",
+   "label": "Filipovich 2018",
+   "country": "Mexico",
+   "what": "cash transfers",
+   "panel": "recurring",
+   "est": -0.01,
+   "lo": -0.01,
+   "hi": 0.0
+  },
+  {
+   "id": "Stratmann2010Earmarks",
+   "label": "Stratmann 2010",
+   "country": "U.S.",
+   "what": "earmarks",
+   "panel": "oneoff",
+   "est": 3.39,
+   "lo": 0.68,
+   "hi": 6.11
+  },
+  {
+   "id": "SolOll2008Partisan",
+   "label": "Solé-Ollé 2008",
+   "country": "Spain",
+   "what": "grants to towns",
+   "panel": "oneoff",
+   "est": 1.31,
+   "lo": 0.23,
+   "hi": 2.39
+  },
+  {
+   "id": "Fukumoto2024After",
+   "label": "Fukumoto 2024",
+   "country": "Japan",
+   "what": "disaster relief",
+   "panel": "oneoff",
+   "est": 1.26,
+   "lo": 0.53,
+   "hi": 1.99
+  },
+  {
+   "id": "Reiff2022Hungarian_hvp",
+   "label": "Reiff 2022",
+   "country": "Hungary",
+   "what": "village program",
+   "panel": "oneoff",
+   "est": 0.31,
+   "lo": 0.22,
+   "hi": 0.4
+  },
+  {
+   "id": "Clemens2025Incumbents",
+   "label": "Clemens 2025",
+   "country": "U.S.",
+   "what": "pandemic aid",
+   "panel": "oneoff",
+   "est": 0.23,
+   "lo": 0.08,
+   "hi": 0.38
+  },
+  {
+   "id": "Bagues2016Politicians",
+   "label": "Bagues 2016",
+   "country": "Spain",
+   "what": "lottery prizes",
+   "panel": "oneoff",
+   "est": 0.02,
+   "lo": 0.0,
+   "hi": 0.04
+  },
+  {
+   "id": "Reiff2022Hungarian_csok",
+   "label": "Reiff 2022",
+   "country": "Hungary",
+   "what": "rural housing subsidy",
+   "panel": "oneoff",
+   "est": 0.01,
+   "lo": -0.08,
+   "hi": 0.11
+  }
+ ]
+}
