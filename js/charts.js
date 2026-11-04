@@ -86,13 +86,13 @@
     s += R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states';
     if (R.states_out && R.states_out.length && R.states_out.length <= 8) s += ' (waiting: ' + R.states_out.join(', ') + ')';
     s += '. As of ' + (R.as_of || '').replace('T', ' ').replace(/\.\d+Z?$/, ' UTC').replace(/Z$/, ' UTC') + '.';
-    s += ' Election results: civicAPI (civicapi.org).';   // attribution required by civicAPI's terms (2026-11-03)
+    s += ' Sources: civicAPI, official results, AP.';   // full credit in `about`; short enough for two lines on phones (2026-11-04)   // attribution required by civicAPI's terms (2026-11-03)
     return s;
   }
   function resultsSourceShort() {   // for a narrow panel: the state count and the time only
     if (!hasResults()) return null;
     var R = window.RESULTS;
-    return R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states. As of ' + (R.as_of || '').replace('T', ' ').replace(/:\d\d(\.\d+)?Z?$/, ' UTC').replace(/Z$/, ' UTC') + '. civicAPI.';
+    return R.n_states_in + ' of ' + (R.n_states_in + R.n_states_out) + ' states · civicAPI, official results, AP';   // one line on phones (2026-11-04)
   }
   function standInMark() {   // a stand-in run: a large red watermark behind the figure, so no screenshot can pass for results
     var fs = Math.max(18, Math.min(G.w / 11, 64));
@@ -1518,7 +1518,7 @@
         out += axisBottom(sx, ayO, [-1, 0, 1], function (v) { return v ? sgn(v, 0) : '0'; });
         out += T((hasResults() && r.unitS) || (r.tip === 'govsen' ? 'Points against governor’s party per $10/month' : 'Turnout points per extra $10/month'), G.w / 2, ayO + 40, { fs: 13, anchor: 'middle', fill: C.muted });
       });
-      return out + SRC(resultsSource());
+      return out + SRC(resultsSource(), resultsSourceShort());
     }
     var labelW = Math.min(142, (G.w - 2 * G.m) * 0.46), x0 = G.m + labelW, x1 = G.w - G.m - 10;
     var xs = d3.scaleLinear().domain(realDomain()).range([x0, x1]);
@@ -1538,7 +1538,7 @@
     out += T('Vote points per extra $10/month', G.w / 2, ay + 40, { fs: 13, anchor: 'middle', fill: C.muted });
     if (restore && ladder) out += T('Dot: estimate. Line: 95% range.', G.w / 2, ay + 58, { fs: 11, anchor: 'middle', fill: C.muted });
     if (note) out += N('Further down: less mixing with other differences; wider intervals.', G.m, ay + (restore ? 68 : 47), G.w - 2 * G.m, { fs: 11, halo: false }).svg;
-    out += SRC(resultsSource());
+    out += SRC(resultsSource(), resultsSourceShort());
     return out;
   }
   function drawReportTablet(L) {
@@ -1580,7 +1580,7 @@
     body += row(realVariants()[realVariants().length - 1], x, yy + normal / 2, xs, normal);
     body += axisBottom(xs, bot + 4, [-1, 0, 1, 2], function (v) { return v ? sgn(v, 0) : '0'; });
     body += T('Vote points per extra $10/month', G.w / 2, bot + 40, { fs: 13, fill: C.muted, anchor: 'middle' });
-    SRC(resultsSource());
+    SRC(resultsSource(), resultsSourceShort());
     return out + grp(smooth(0.45, 1, a), body);
   }
   function drawReport(L) {
@@ -1732,7 +1732,7 @@
         out += grp(Math.min(1, a * 3), s_);
       });
     }
-    out += SRC(resultsSource());
+    out += SRC(resultsSource(), resultsSourceShort());
     return out;
   }
 
@@ -1794,7 +1794,7 @@
       if (r.none) out += T(r.none, x0 + 8, cy + fl * 0.35, { fs: fl - 1, fill: C.muted, italic: true });
       else out += IV(xs, cy, r, e, { col: col, main: r.main });
     });
-    out += SRC(resultsSource());
+    out += SRC(resultsSource(), resultsSourceShort());
     return out;
   }
 
