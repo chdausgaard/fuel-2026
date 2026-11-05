@@ -174,6 +174,8 @@
     'prereg': { a: 0.030, b: 0.202, span: [0.76, 0.43] },
   };
   const TIMING_DEFAULT = { a: 0.05, b: 0.45, span: [0.5, 0.36] };
+  // PI 2026-11-05: the results beats scrolled by too fast; each gets twice its scroll length (the motion stays where it was against the text). Four times left screens of a still chart beside an empty column
+  const STRETCH = { 'results': 2, 'results-past': 2, 'results-senate': 2 };
   // where each beat's motion runs: s and e are the block top at its start and end; g0 and g1 the same as geometric p (placeMotion)
   const LAY = {};
   function blockHeight(sec) {
@@ -187,7 +189,10 @@
     const span = tm.span[phone ? 1 : 0], h = blockHeight(sec) / window.innerHeight;
     const e = Math.max(g.stopTop, g.stop - h / 2, g.start - span), s = Math.min(g.trig, e + span);
     LAY[id] = { a: tm.a, b: tm.b, s, e, g0: 0, g1: 0 };
-    sec.style.minHeight = (100 * Math.max(g.len, g.trig - e + (g.enter - g.trig) + g.hold)) + 'vh';
+    const base = 100 * Math.max(g.len, g.trig - e + (g.enter - g.trig) + g.hold);
+    sec.style.minHeight = base + 'vh';
+    // a stretched beat takes a multiple of the height it has at the base length, which on a phone is often set by its text rather than by base
+    if (STRETCH[id]) sec.style.minHeight = (STRETCH[id] * Math.max(base, 100 * sec.getBoundingClientRect().height / window.innerHeight)) + 'vh';
   }
   function placeMotion(g) {
     const vh = window.innerHeight;
